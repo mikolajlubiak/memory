@@ -24,9 +24,11 @@ void Memory::run() {
   auto selector_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-              ftxui::Slider("Size:", &size, 2, 10),
+              ftxui::Slider("Size:", &size, 2, 10, 2),
               ftxui::Button("Select",
                             [&] {
+                              size = (size / 2) * 2; // make multiple of 2
+
                               total_pairs = std::pow(size, 2) / 2;
 
                               old = std::chrono::steady_clock::now();
