@@ -13,58 +13,67 @@
 #include <thread>
 
 void Memory::run() {
+  screen.SetCursor(ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
+
+  auto blinking_handle =
+      std::async(std::launch::async, [this] { async_blinking(); });
+
   renderer = createRenderer();
   renderer |= catchEvent();
 
   auto selector_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-              ftxui::Slider("Slider", &size, 2, 10),
+              ftxui::Slider("Size:", &size, 2, 10),
               ftxui::Button("Select",
                             [&] {
                               total_pairs = std::pow(size, 2) / 2;
+
+                              old = std::chrono::steady_clock::now();
+
                               initializeBoard();
 
                               screen.Loop(renderer);
-
-                              message = "Select first card";
-                              textStyle =
-                                  ftxui::underlined |
-                                  ftxui::color(ftxui::Color::LightYellow3);
-
-                              gameStatus = firstCard;
-
-                              pairsFound = 0;
-                              current_x = 0;
-                              current_y = 0;
                             }) |
                   ftxui::center,
           }),
       }) |
       ftxui::center;
 
-  screen.SetCursor(ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
-
   screen.Loop(selector_window);
 }
 
 // Function to initialize the game board
 void Memory::initializeBoard() {
+  // Reset the game state
+  board.clear();
+  revealed.clear();
+  revealedColors.clear();
+
+  pairsFound = 0;
+  current_x = 0;
+  current_y = 0;
+  message = "Select first card";
+  textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
+  gameStatus = firstCard;
+
   std::vector<char> cards;
+  cards.reserve(total_pairs * 2);
+
   for (char c = 'A'; c < 'A' + total_pairs; ++c) {
-    cards.push_back(c);
-    cards.push_back(c); // Add pairs
+    cards.emplace_back(c);
+    cards.emplace_back(c); // Add pairs
   }
 
   // Shuffle the cards using std::shuffle
   std::random_device rd;  // Obtain a random number from hardware
   std::mt19937 eng(rd()); // Seed the generator
-  std::shuffle(cards.begin(), cards.end(),
-               eng); // Shuffle the cards
+  std::shuffle(cards.begin(), cards.end(), eng); // Shuffle the cards
 
   board.resize(size, std::vector<char>(size));
-  revealed.resize(size, std::vector<bool>(size));
-  revealedColors.resize(size, std::vector<ftxui::Color>(size));
+  revealed.resize(size, std::vector<bool>(size, false));
+  revealedColors.resize(
+      size, std::vector<ftxui::Color>(size, ftxui::Color::YellowLight));
 
   // Fill the boards
   for (int i = 0; i < size; ++i) {
@@ -80,9 +89,13 @@ void Memory::initializeBoard() {
 ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
                                    const std::int32_t *const current_y,
                                    const bool *const blink) {
-  auto rows = std::vector<ftxui::Element>();
+  std::vector<ftxui::Element> rows;
+  rows.reserve(size);
+
   for (int i = 0; i < size; ++i) {
-    auto cells = std::vector<ftxui::Element>();
+    std::vector<ftxui::Element> cells;
+    cells.reserve(size);
+
     for (int j = 0; j < size; ++j) {
       ftxui::Element cell;
 
@@ -103,9 +116,9 @@ ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
              ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 70 / size) |
              ftxui::size(ftxui::HEIGHT, ftxui::EQUAL, 35 / size);
 
-      cells.push_back(cell);
+      cells.emplace_back(cell);
     }
-    rows.push_back(ftxui::hbox(cells));
+    rows.emplace_back(ftxui::hbox(cells));
   }
   return ftxui::vbox(rows);
 }
@@ -252,6 +265,6 @@ void Memory::async_blinking() {
       blink = !blink;
       screen.PostEvent(ftxui::Event::Custom);
     }
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    std::this_thread::sleep_for(timerDuration);
   }
 }

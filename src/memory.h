@@ -9,6 +9,7 @@
 #include <ftxui/screen/screen.hpp> // for Screen
 
 // std
+#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -48,9 +49,9 @@ private:
 
   int size = 4; // Size of the board
 
-  std::uint32_t total_pairs;                 // Total pairs of cards
-  std::vector<std::vector<char>> board{};    // board
-  std::vector<std::vector<bool>> revealed{}; // revealed cards
+  std::uint32_t total_pairs = std::pow(size, 2) / 2; // Total pairs of cards
+  std::vector<std::vector<char>> board{};            // board
+  std::vector<std::vector<bool>> revealed{};         // revealed cards
   std::vector<std::vector<ftxui::Color>>
       revealedColors{}; // colors of revealed cards
 
@@ -58,7 +59,9 @@ private:
   bool blink = false;
   std::chrono::milliseconds timerDuration = std::chrono::milliseconds(1000);
   std::chrono::milliseconds timer = timerDuration;
-  std::chrono::time_point<std::chrono::steady_clock> now, old;
+  std::chrono::time_point<std::chrono::steady_clock> now;
+  std::chrono::time_point<std::chrono::steady_clock> old =
+      std::chrono::steady_clock::now();
 
   gameStatusEnum gameStatus = firstCard;
 
