@@ -6,11 +6,13 @@
 
 // std
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <random>
+#include <thread>
 #include <vector>
 
 char board[SIZE][SIZE];    // The board to display
@@ -42,20 +44,41 @@ void initializeBoard() {
 }
 
 // Function to display the board
-void displayBoard(const int x, const int y) {
-  clear_screen();
-  std::cout << "Memory Game Board:\n";
-  for (int i = 0; i < SIZE; ++i) {
-    for (int j = 0; j < SIZE; ++j) {
-      if (i == x && j == y) {
-        std::cout << std::setw(2) << '.' << " ";
-      } else if (revealed[i][j]) {
-        std::cout << std::setw(2) << board[i][j] << " ";
-      } else {
-        std::cout << std::setw(2) << hidden[i][j] << " ";
-      }
+void displayBoard(const int *const x, const int *const y,
+                  const char *const text_to_print, bool *const blink,
+                  std::chrono::duration<float> *const timer) {
+  std::chrono::time_point<std::chrono::system_clock> now, old;
+  old = std::chrono::system_clock::now();
+
+  while (true) {
+    now = std::chrono::system_clock::now();
+    std::chrono::duration<float> elapsed_seconds = now - old;
+    old = now;
+
+    *timer -= elapsed_seconds;
+
+    if (timer->count() < 0.0f) {
+      *blink = !(*blink);
+      *timer = std::chrono::milliseconds(1000);
     }
-    std::cout << std::endl;
+
+    clear_screen();
+    std::cout << "Memory Game Board:\n";
+    for (int i = 0; i < SIZE; ++i) {
+      for (int j = 0; j < SIZE; ++j) {
+        if (i == *x && j == *y && !(*blink)) {
+          std::cout << std::setw(2) << '.' << " ";
+        } else if (revealed[i][j]) {
+          std::cout << std::setw(2) << board[i][j] << " ";
+        } else {
+          std::cout << std::setw(2) << hidden[i][j] << " ";
+        }
+      }
+      std::cout << std::endl;
+    }
+    std::cout << text_to_print << std::endl;
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
 }
 
@@ -64,13 +87,14 @@ bool checkMatch(int x1, int y1, int x2, int y2) {
   return board[x1][y1] == board[x2][y2] && !(x1 == x2 && y1 == y2);
 }
 
-void moveAcrossBoard(int *const x, int *const y, const bool select) {
+void moveAcrossBoard(int *const x, int *const y, bool *const blink,
+                     std::chrono::duration<float> *const timer,
+                     const bool select) {
   char ch;
 
   do {
     ch = getch();
     switch (ch) {
-    case 'q':
     case '\n':
       break;
 #ifdef _WIN32
@@ -92,19 +116,6 @@ void moveAcrossBoard(int *const x, int *const y, const bool select) {
       default:
         break;
       }
-
-      *x = std::clamp(*x, 0, SIZE - 1);
-      *y = std::clamp(*y, 0, SIZE - 1);
-
-      displayBoard(*x, *y);
-
-      if (select) {
-        std::cout << "Select card";
-      } else {
-        std::cout << "Press enter to continue...";
-      }
-
-      break;
 #else
     case '\033':
       getch();           // Skip the '[' character
@@ -124,24 +135,21 @@ void moveAcrossBoard(int *const x, int *const y, const bool select) {
       default:
         break;
       }
+#endif
 
       *x = std::clamp(*x, 0, SIZE - 1);
       *y = std::clamp(*y, 0, SIZE - 1);
 
-      displayBoard(*x, *y);
-
-      if (select) {
-        std::cout << "Select card";
-      } else {
-        std::cout << "Cards don't match.\n";
-        std::cout << "Press enter to continue...";
-      }
+      *blink = false;
+      *timer = std::chrono::milliseconds(1000);
 
       break;
-#endif
     default:
       break;
     }
 
   } while (ch != '\n' || (revealed[*x][*y] && select));
+
+  *blink = select;
+  *timer = std::chrono::milliseconds(1000);
 }
