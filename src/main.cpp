@@ -83,21 +83,21 @@ int main() {
       return true;
     }
 
+    if (event != ftxui::Event::Custom) {
+      change_blink(&blink, &timer, false, timerDuration);
+    }
+
     if (event == ftxui::Event::ArrowUp) {
       current_x--;
-      change_blink(&blink, &timer, false, timerDuration);
     }
     if (event == ftxui::Event::ArrowDown) {
       current_x++;
-      change_blink(&blink, &timer, false, timerDuration);
     }
     if (event == ftxui::Event::ArrowRight) {
       current_y++;
-      change_blink(&blink, &timer, false, timerDuration);
     }
     if (event == ftxui::Event::ArrowLeft) {
       current_y--;
-      change_blink(&blink, &timer, false, timerDuration);
     }
 
     current_x = std::clamp(current_x, 0, SIZE - 1);
