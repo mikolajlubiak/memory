@@ -1,25 +1,46 @@
+// header
 #include "memory.h"
+
+// local
 #include "common.h"
 
 // std
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <cstdlib>
+#include <cstring>
 #include <ctime>
+#include <future>
 #include <iomanip>
 #include <iostream>
 #include <random>
 #include <thread>
 #include <vector>
 
-char board[SIZE][SIZE];                  // The board to display
-bool revealed[SIZE][SIZE];               // To track revealed cards
-ftxui::Color revealedColors[SIZE][SIZE]; // To track card colors
+Memory::Memory(uint32_t size) : size(size) {}
+
+void Memory::init() {
+  total_pairs = std::pow(size, 2) / 2;
+  old = std::chrono::steady_clock::now();
+
+  initializeBoard();
+
+  renderer = createRenderer();
+  renderer |= catchEvent();
+}
+
+void Memory::loop() {
+  auto blinking_handle =
+      std::async(std::launch::async, [this] { async_blinking(); });
+
+  screen.Loop(renderer);
+}
 
 // Function to initialize the game board
-void initializeBoard() {
+void Memory::initializeBoard() {
   std::vector<char> cards;
-  for (char c = 'A'; c < 'A' + TOTAL_PAIRS; ++c) {
+  for (char c = 'A'; c < 'A' + total_pairs; ++c) {
     cards.push_back(c);
     cards.push_back(c); // Add pairs
   }
@@ -29,24 +50,26 @@ void initializeBoard() {
   std::mt19937 eng(rd()); // Seed the generator
   std::shuffle(cards.begin(), cards.end(), eng); // Shuffle the cards
 
+  board.resize(size, std::vector<char>(size));
+  revealed.resize(size, std::vector<bool>(size, false));
+  revealedColors.resize(
+      size, std::vector<ftxui::Color>(size, ftxui::Color::YellowLight));
   // Fill the board
-  for (int i = 0; i < SIZE; ++i) {
-    for (int j = 0; j < SIZE; ++j) {
-      board[i][j] = cards[i * SIZE + j];
-      revealed[i][j] = false;                           // Not revealed
-      revealedColors[i][j] = ftxui::Color::YellowLight; // YellowLight
+  for (int i = 0; i < size; ++i) {
+    for (int j = 0; j < size; ++j) {
+      board[i][j] = cards[i * size + j];
     }
   }
 }
 
 // Function to create the board display
-ftxui::Element CreateBoard(const int *const current_x,
-                           const int *const current_y,
-                           const bool *const blink) {
+ftxui::Element Memory::CreateBoard(const std::uint32_t *const current_x,
+                                   const std::uint32_t *const current_y,
+                                   const bool *const blink) {
   auto rows = std::vector<ftxui::Element>();
-  for (int i = 0; i < SIZE; ++i) {
+  for (int i = 0; i < size; ++i) {
     auto cells = std::vector<ftxui::Element>();
-    for (int j = 0; j < SIZE; ++j) {
+    for (int j = 0; j < size; ++j) {
       ftxui::Element cell;
 
       // Determine the content of the cell
@@ -75,6 +98,146 @@ ftxui::Element CreateBoard(const int *const current_x,
 }
 
 // Function to check if the selected cards match
-bool checkMatch(int x1, int y1, int x2, int y2) {
+bool Memory::checkMatch(std::uint32_t x1, std::uint32_t y1, std::uint32_t x2,
+                        std::uint32_t y2) {
   return board[x1][y1] == board[x2][y2] && !(x1 == x2 && y1 == y2);
+}
+
+ftxui::Component Memory::createRenderer() {
+  return ftxui::Renderer([this] { return createUI(); });
+}
+
+ftxui::Element Memory::createUI() {
+  return ftxui::vbox({
+      ftxui::hbox({
+          ftxui::text("Memory Game") | ftxui::color(ftxui::Color::Grey100) |
+              ftxui::bold,
+          ftxui::separator(),
+
+          ftxui::text("Pairs Found: "),
+          ftxui::text(std::to_string(pairsFound)) | ftxui::blink,
+          ftxui::separator(),
+
+          ftxui::text(message) | textStyle,
+      }) | ftxui::center,
+      ftxui::separator(),
+
+      CreateBoard(&current_x, &current_y, &blink) | ftxui::center,
+  });
+}
+
+ftxui::ComponentDecorator Memory::catchEvent() {
+  return ftxui::CatchEvent(
+      [this](ftxui::Event event) { return onEvent(event); });
+}
+
+bool Memory::onEvent(ftxui::Event event) {
+  if (event == ftxui::Event::Character('q')) {
+    screen.ExitLoopClosure()();
+    running = false;
+    return true;
+  }
+
+  if (event != ftxui::Event::Custom) {
+    change_blink(&blink, &timer, false, timerDuration);
+  }
+
+  if (event == ftxui::Event::ArrowUp) {
+    current_x--;
+  }
+  if (event == ftxui::Event::ArrowDown) {
+    current_x++;
+  }
+  if (event == ftxui::Event::ArrowRight) {
+    current_y++;
+  }
+  if (event == ftxui::Event::ArrowLeft) {
+    current_y--;
+  }
+
+  current_x = std::clamp(current_x, 0U, size - 1);
+  current_y = std::clamp(current_y, 0U, size - 1);
+
+  if (event == ftxui::Event::Return && gameStatus != finished) {
+    if (gameStatus == firstCard) {
+      revealed[current_x][current_y] = true;
+
+      old_x = current_x;
+      old_y = current_y;
+      message = "Select second card";
+
+      gameStatus = secondCard;
+
+      change_blink(&blink, &timer, true, timerDuration);
+
+    } else if (gameStatus == secondCard) {
+      if (old_x == current_x && old_y == current_y) {
+        return false;
+      }
+
+      revealed[current_x][current_y] = true;
+
+      if (checkMatch(current_x, current_y, old_x, old_y)) {
+        pairsFound++;
+
+        revealedColors[current_x][current_y] = ftxui::Color::Green;
+        revealedColors[old_x][old_y] = ftxui::Color::Green;
+
+        if (pairsFound < total_pairs) {
+          message = "Select first card";
+
+          gameStatus = firstCard;
+        } else {
+          message = "Congratulations! You've found all pairs!";
+          textStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
+
+          gameStatus = finished;
+        }
+
+      } else {
+        revealedColors[current_x][current_y] = ftxui::Color::Red;
+        revealedColors[old_x][old_y] = ftxui::Color::Red;
+
+        message = "Cards don't match. Press enter to continue...";
+        textStyle = ftxui::underlinedDouble | ftxui::color(ftxui::Color::Red);
+
+        temp_x = current_x;
+        temp_y = current_y;
+
+        gameStatus = turnNoMatch;
+      }
+
+      change_blink(&blink, &timer, true, timerDuration);
+
+    } else if (gameStatus == turnNoMatch) {
+      revealed[temp_x][temp_y] = false; // Hide the first card again
+      revealed[old_x][old_y] = false;   // Hide the second card again
+
+      revealedColors[temp_x][temp_y] = ftxui::Color::YellowLight;
+      revealedColors[old_x][old_y] = ftxui::Color::YellowLight;
+
+      message = "Select first card";
+      textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
+
+      gameStatus = firstCard;
+
+      change_blink(&blink, &timer, false, timerDuration);
+    }
+  }
+
+  return false;
+}
+
+void Memory::async_blinking() {
+  while (running) {
+    now = std::chrono::steady_clock::now();
+    timer -= std::chrono::duration_cast<decltype(timer)>(now - old);
+    old = now;
+    if (timer.count() < 0.0) {
+      timer = timerDuration;
+      blink = !blink;
+      screen.PostEvent(ftxui::Event::Custom);
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
 }
