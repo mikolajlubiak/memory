@@ -22,11 +22,7 @@ public:
     finished,
   };
 
-  Memory(uint32_t size);
-
-  void init();
-
-  void loop();
+  void run();
 
 private:
   // Function to initialize the game board
@@ -50,7 +46,8 @@ private:
 
   void async_blinking();
 
-  std::uint32_t size;                        // Size of the board (4x4)
+  int size = 4; // Size of the board
+
   std::uint32_t total_pairs;                 // Total pairs of cards
   std::vector<std::vector<char>> board{};    // board
   std::vector<std::vector<bool>> revealed{}; // revealed cards

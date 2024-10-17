@@ -4,11 +4,10 @@
 
 // Main game loop
 int main() {
-  Memory game{4};
 
-  game.init();
+  Memory game{};
 
-  game.loop();
+  game.run();
 
   return 0;
 }

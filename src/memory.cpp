@@ -12,25 +12,40 @@
 #include <random>
 #include <thread>
 
-Memory::Memory(uint32_t size) : size(size) {}
+void Memory::run() {
+  renderer = createRenderer();
+  renderer |= catchEvent();
 
-void Memory::init() {
-  total_pairs = std::pow(size, 2) / 2;
-  old = std::chrono::steady_clock::now();
+  auto selector_window =
+      ftxui::Window({
+          .inner = ftxui::Container::Vertical({
+              ftxui::Slider("Slider", &size, 2, 10),
+              ftxui::Button("Select",
+                            [&] {
+                              total_pairs = std::pow(size, 2) / 2;
+                              initializeBoard();
+
+                              screen.Loop(renderer);
+
+                              message = "Select first card";
+                              textStyle =
+                                  ftxui::underlined |
+                                  ftxui::color(ftxui::Color::LightYellow3);
+
+                              gameStatus = firstCard;
+
+                              pairsFound = 0;
+                              current_x = 0;
+                              current_y = 0;
+                            }) |
+                  ftxui::center,
+          }),
+      }) |
+      ftxui::center;
 
   screen.SetCursor(ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
 
-  initializeBoard();
-
-  renderer = createRenderer();
-  renderer |= catchEvent();
-}
-
-void Memory::loop() {
-  auto blinking_handle =
-      std::async(std::launch::async, [this] { async_blinking(); });
-
-  screen.Loop(renderer);
+  screen.Loop(selector_window);
 }
 
 // Function to initialize the game board
@@ -44,16 +59,19 @@ void Memory::initializeBoard() {
   // Shuffle the cards using std::shuffle
   std::random_device rd;  // Obtain a random number from hardware
   std::mt19937 eng(rd()); // Seed the generator
-  std::shuffle(cards.begin(), cards.end(), eng); // Shuffle the cards
+  std::shuffle(cards.begin(), cards.end(),
+               eng); // Shuffle the cards
 
   board.resize(size, std::vector<char>(size));
-  revealed.resize(size, std::vector<bool>(size, false));
-  revealedColors.resize(
-      size, std::vector<ftxui::Color>(size, ftxui::Color::YellowLight));
-  // Fill the board
+  revealed.resize(size, std::vector<bool>(size));
+  revealedColors.resize(size, std::vector<ftxui::Color>(size));
+
+  // Fill the boards
   for (int i = 0; i < size; ++i) {
     for (int j = 0; j < size; ++j) {
       board[i][j] = cards[i * size + j];
+      revealed[i][j] = false;
+      revealedColors[i][j] = ftxui::Color::YellowLight;
     }
   }
 }
@@ -82,9 +100,8 @@ ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
 
       // Create the cell with the determined content
       cell = cell | ftxui::center | ftxui::border | ftxui::bold |
-             ftxui::size(ftxui::WIDTH, ftxui::EQUAL,
-                         16)                                // Set width to 16
-             | ftxui::size(ftxui::HEIGHT, ftxui::EQUAL, 9); // Set height to 9
+             ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 70 / size) |
+             ftxui::size(ftxui::HEIGHT, ftxui::EQUAL, 35 / size);
 
       cells.push_back(cell);
     }
@@ -105,21 +122,22 @@ ftxui::Component Memory::createRenderer() {
 
 ftxui::Element Memory::createUI() {
   return ftxui::vbox({
-      ftxui::hbox({
-          ftxui::text("Memory Game") | ftxui::color(ftxui::Color::Grey100) |
-              ftxui::bold,
-          ftxui::separator(),
+             ftxui::hbox({
+                 ftxui::text("Memory Game") |
+                     ftxui::color(ftxui::Color::Grey100) | ftxui::bold,
+                 ftxui::separator(),
 
-          ftxui::text("Pairs Found: "),
-          ftxui::text(std::to_string(pairsFound)) | ftxui::blink,
-          ftxui::separator(),
+                 ftxui::text("Pairs Found: "),
+                 ftxui::text(std::to_string(pairsFound)) | ftxui::blink,
+                 ftxui::separator(),
 
-          ftxui::text(message) | textStyle,
-      }) | ftxui::center,
-      ftxui::separator(),
+                 ftxui::text(message) | textStyle,
+             }) | ftxui::center,
+             ftxui::separator(),
 
-      CreateBoard(&current_x, &current_y, &blink) | ftxui::center,
-  });
+             CreateBoard(&current_x, &current_y, &blink) | ftxui::center,
+         }) |
+         ftxui::center;
 }
 
 ftxui::ComponentDecorator Memory::catchEvent() {
