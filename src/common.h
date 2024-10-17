@@ -1,7 +1,11 @@
 #pragma once
 
-char getch();
+#include <chrono>
 
-void clear_screen();
-
-void hideCursor();
+inline void change_blink(bool *const pBlink,
+                         std::chrono::milliseconds *const pTimer,
+                         const bool blink_or_not,
+                         std::chrono::milliseconds &timerDuration) {
+  *pBlink = blink_or_not;
+  *pTimer = timerDuration;
+}
