@@ -8,21 +8,17 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <cstdlib>
-#include <cstring>
-#include <ctime>
 #include <future>
-#include <iomanip>
-#include <iostream>
 #include <random>
 #include <thread>
-#include <vector>
 
 Memory::Memory(uint32_t size) : size(size) {}
 
 void Memory::init() {
   total_pairs = std::pow(size, 2) / 2;
   old = std::chrono::steady_clock::now();
+
+  screen.SetCursor(ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
 
   initializeBoard();
 
@@ -63,8 +59,8 @@ void Memory::initializeBoard() {
 }
 
 // Function to create the board display
-ftxui::Element Memory::CreateBoard(const std::uint32_t *const current_x,
-                                   const std::uint32_t *const current_y,
+ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
+                                   const std::int32_t *const current_y,
                                    const bool *const blink) {
   auto rows = std::vector<ftxui::Element>();
   for (int i = 0; i < size; ++i) {
@@ -155,8 +151,8 @@ bool Memory::onEvent(ftxui::Event event) {
     current_y--;
   }
 
-  current_x = std::clamp(current_x, 0U, size - 1);
-  current_y = std::clamp(current_y, 0U, size - 1);
+  current_x = std::clamp(current_x, 0, static_cast<std::int32_t>(size - 1));
+  current_y = std::clamp(current_y, 0, static_cast<std::int32_t>(size - 1));
 
   if (event == ftxui::Event::Return && gameStatus != finished) {
     if (gameStatus == firstCard) {

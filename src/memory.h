@@ -9,7 +9,6 @@
 #include <ftxui/screen/screen.hpp> // for Screen
 
 // std
-#include <cmath>
 #include <cstdint>
 #include <vector>
 
@@ -33,8 +32,8 @@ private:
   // Function to initialize the game board
   void initializeBoard();
 
-  ftxui::Element CreateBoard(const std::uint32_t *const current_x,
-                             const std::uint32_t *const current_y,
+  ftxui::Element CreateBoard(const std::int32_t *const current_x,
+                             const std::int32_t *const current_y,
                              const bool *const blink);
 
   // Function to check if the selected cards match
@@ -51,10 +50,10 @@ private:
 
   void async_blinking();
 
-  std::uint32_t size = 4;                            // Size of the board (4x4)
-  std::uint32_t total_pairs = std::pow(size, 2) / 2; // Total pairs of cards
-  std::vector<std::vector<char>> board{};            // board
-  std::vector<std::vector<bool>> revealed{};         // revealed cards
+  std::uint32_t size;                        // Size of the board (4x4)
+  std::uint32_t total_pairs;                 // Total pairs of cards
+  std::vector<std::vector<char>> board{};    // board
+  std::vector<std::vector<bool>> revealed{}; // revealed cards
   std::vector<std::vector<ftxui::Color>>
       revealedColors{}; // colors of revealed cards
 
@@ -68,8 +67,8 @@ private:
 
   std::uint32_t pairsFound = 0;
 
-  std::uint32_t current_x = 0;
-  std::uint32_t current_y = 0;
+  std::int32_t current_x = 0;
+  std::int32_t current_y = 0;
 
   std::uint32_t old_x = 0;
   std::uint32_t old_y = 0;
