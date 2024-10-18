@@ -301,7 +301,7 @@ void Memory::async_blinking() {
       screen.PostEvent(ftxui::Event::Custom);
     }
 
-    std::this_thread::sleep_for(timerDuration);
+    std::this_thread::sleep_for(timerDuration + std::chrono::milliseconds(10));
   }
 }
 
