@@ -108,8 +108,8 @@ void Memory::run() {
           }),
 
           .title = "Load game",
-          .width = 10 * (saves_list.size() / 2) + 15,
-          .height = 5 * (saves_list.size() / 3) + 7,
+          .width = static_cast<int>(10 * (saves_list.size() / 2) + 15),
+          .height = static_cast<int>(5 * (saves_list.size() / 3) + 7),
       }) |
       ftxui::align_right | ftxui::vcenter | ftxui::flex;
 
@@ -132,11 +132,12 @@ void Memory::initializeBoard() {
   resetState();
 
   std::vector<char> cards;
-  cards.reserve(total_pairs * 2);
+  cards.resize(total_pairs * 2);
 
-  for (char c = 'A'; c < 'A' + total_pairs; ++c) {
-    cards.emplace_back(c);
-    cards.emplace_back(c); // Add pairs
+  for (int i = 0; i < total_pairs * 2; i += 2) {
+      char c = 'A' + i / 2;
+      cards[i] = c;
+      cards[i + 1] = c;
   }
 
   // Shuffle the cards using std::shuffle
@@ -393,6 +394,13 @@ void Memory::saveState(const std::string &filename) {
   file.write(reinterpret_cast<const char *>(&gameStatus), sizeof(gameStatus));
   file.write(reinterpret_cast<const char *>(&pairsFound), sizeof(pairsFound));
 
+  file.write(reinterpret_cast<const char*>(&current_x), sizeof(current_x));
+  file.write(reinterpret_cast<const char*>(&current_y), sizeof(current_y));
+  file.write(reinterpret_cast<const char*>(&old_x), sizeof(old_x));
+  file.write(reinterpret_cast<const char*>(&old_y), sizeof(old_y));
+
+
+
   // No need to store the message
   /*
   file.write(reinterpret_cast<const char *>(&message_size),
@@ -431,6 +439,12 @@ void Memory::loadState(const std::string &filename) {
   file.read(reinterpret_cast<char *>(&size), sizeof(size));
   file.read(reinterpret_cast<char *>(&gameStatus), sizeof(gameStatus));
   file.read(reinterpret_cast<char *>(&pairsFound), sizeof(pairsFound));
+
+  file.read(reinterpret_cast<char*>(&current_x), sizeof(current_x));
+  file.read(reinterpret_cast<char*>(&current_y), sizeof(current_y));
+  file.read(reinterpret_cast<char*>(&old_x), sizeof(old_x));
+  file.read(reinterpret_cast<char*>(&old_y), sizeof(old_y));
+
 
   /*
   file.read(reinterpret_cast<char *>(&message_size), sizeof(message_size));
