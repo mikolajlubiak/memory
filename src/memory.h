@@ -46,14 +46,19 @@ private:
   bool onEvent(ftxui::Event event);
 
   void async_blinking();
+  void slider_changed(const int *const temp_size);
 
-  int size = 4; // Size of the board
+  void checkXY();
+
+  std::uint32_t size = 4; // Size of the board
 
   std::uint32_t total_pairs = std::pow(size, 2) / 2; // Total pairs of cards
   std::vector<std::vector<char>> board{};            // board
   std::vector<std::vector<bool>> revealed{};         // revealed cards
   std::vector<std::vector<ftxui::Color>>
       revealedColors{}; // colors of revealed cards
+
+  bool selection_stage = true;
 
   // blinking related code
   bool blink = false;
@@ -85,4 +90,6 @@ private:
   ftxui::ScreenInteractive screen = ftxui::ScreenInteractive::Fullscreen();
 
   ftxui::Component renderer;
+
+  std::mutex mtx;
 };

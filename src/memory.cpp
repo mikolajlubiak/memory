@@ -9,6 +9,7 @@
 #include <chrono>
 #include <cmath>
 #include <future>
+#include <mutex>
 #include <random>
 #include <thread>
 
@@ -18,31 +19,43 @@ void Memory::run() {
   auto blinking_handle =
       std::async(std::launch::async, [this] { async_blinking(); });
 
+  initializeBoard();
+
   renderer = createRenderer();
   renderer |= catchEvent();
+
+  int temp_size = 2;
+
+  auto slider_handle =
+      std::async(std::launch::async, [&] { slider_changed(&temp_size); });
 
   auto selector_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-              ftxui::Slider("Size:", &size, 2, 10, 2),
-              ftxui::Button("Select",
-                            [&] {
-                              size = (size / 2) * 2; // make multiple of 2
+                       ftxui::Slider("Size:", &temp_size, 1, 5, 1),
 
-                              total_pairs = std::pow(size, 2) / 2;
+                       ftxui::Button("Select",
+                                     [&] {
+                                       std::lock_guard<std::mutex> lock(mtx);
 
-                              old = std::chrono::steady_clock::now();
+                                       selection_stage = false;
 
-                              initializeBoard();
+                                       size = temp_size * 2;
 
-                              screen.Loop(renderer);
-                            }) |
-                  ftxui::center,
-          }),
+                                       total_pairs = std::pow(size, 2) / 2;
+
+                                       initializeBoard();
+                                     }) |
+                           ftxui::center | ftxui::flex,
+                   }) |
+                   ftxui::flex,
       }) |
-      ftxui::center;
+      ftxui::center | ftxui::flex;
 
-  screen.Loop(selector_window);
+  auto main_loop = ftxui::Container::Stacked(
+      {ftxui::Maybe(selector_window, &selection_stage), renderer});
+
+  screen.Loop(main_loop);
 }
 
 // Function to initialize the game board
@@ -91,13 +104,10 @@ void Memory::initializeBoard() {
 ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
                                    const std::int32_t *const current_y,
                                    const bool *const blink) {
-  std::vector<ftxui::Element> rows;
-  rows.reserve(size);
+  std::vector<std::vector<ftxui::Element>> cells;
+  cells.resize(size, std::vector<ftxui::Element>(size));
 
   for (int i = 0; i < size; ++i) {
-    std::vector<ftxui::Element> cells;
-    cells.reserve(size);
-
     for (int j = 0; j < size; ++j) {
       ftxui::Element cell;
 
@@ -114,15 +124,20 @@ ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
       }
 
       // Create the cell with the determined content
-      cell = cell | ftxui::center | ftxui::border | ftxui::bold |
-             ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 70 / size) |
-             ftxui::size(ftxui::HEIGHT, ftxui::EQUAL, 35 / size);
+      // cell = cell | ftxui::center | ftxui::border | ftxui::bold |
+      //       ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 60 / size) |
+      //       ftxui::size(ftxui::HEIGHT, ftxui::EQUAL, 30 / size);
+      cell =
+          cell | ftxui::center | ftxui::border | ftxui::bold |
+          ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 120.0f / size) |
+          ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN,
+                      120.0f / size) | // least common multiple if {2,4,6,8,10}
+          ftxui::flex;
 
-      cells.emplace_back(cell);
+      cells[i][j] = cell;
     }
-    rows.emplace_back(ftxui::hbox(cells));
   }
-  return ftxui::vbox(rows);
+  return ftxui::gridbox(cells) | ftxui::center | ftxui::flex;
 }
 
 // Function to check if the selected cards match
@@ -136,7 +151,7 @@ ftxui::Component Memory::createRenderer() {
 }
 
 ftxui::Element Memory::createUI() {
-  return ftxui::vbox({
+  return ftxui::window(
              ftxui::hbox({
                  ftxui::text("Memory Game") |
                      ftxui::color(ftxui::Color::Grey100) | ftxui::bold,
@@ -148,11 +163,8 @@ ftxui::Element Memory::createUI() {
 
                  ftxui::text(message) | textStyle,
              }) | ftxui::center,
-             ftxui::separator(),
-
-             CreateBoard(&current_x, &current_y, &blink) | ftxui::center,
-         }) |
-         ftxui::center;
+             CreateBoard(&current_x, &current_y, &blink)) |
+         ftxui::flex;
 }
 
 ftxui::ComponentDecorator Memory::catchEvent() {
@@ -161,6 +173,8 @@ ftxui::ComponentDecorator Memory::catchEvent() {
 }
 
 bool Memory::onEvent(ftxui::Event event) {
+  std::lock_guard<std::mutex> lock(mtx);
+
   if (event == ftxui::Event::Character('q')) {
     screen.ExitLoopClosure()();
     running = false;
@@ -173,35 +187,42 @@ bool Memory::onEvent(ftxui::Event event) {
 
   if (event == ftxui::Event::ArrowUp) {
     current_x--;
+    checkXY();
+    return true;
   }
   if (event == ftxui::Event::ArrowDown) {
     current_x++;
+    checkXY();
+    return true;
   }
   if (event == ftxui::Event::ArrowRight) {
     current_y++;
+    checkXY();
+    return true;
   }
   if (event == ftxui::Event::ArrowLeft) {
     current_y--;
+    checkXY();
+    return true;
   }
-
-  current_x = std::clamp(current_x, 0, static_cast<std::int32_t>(size - 1));
-  current_y = std::clamp(current_y, 0, static_cast<std::int32_t>(size - 1));
 
   if (event == ftxui::Event::Return && gameStatus != finished) {
     if (gameStatus == firstCard) {
-      revealed[current_x][current_y] = true;
+      change_blink(&blink, &timer, true, timerDuration);
 
+      revealed[current_x][current_y] = true;
       old_x = current_x;
       old_y = current_y;
       message = "Select second card";
-
       gameStatus = secondCard;
 
-      change_blink(&blink, &timer, true, timerDuration);
+      return true;
 
     } else if (gameStatus == secondCard) {
+      change_blink(&blink, &timer, true, timerDuration);
+
       if (old_x == current_x && old_y == current_y) {
-        return false;
+        return true;
       }
 
       revealed[current_x][current_y] = true;
@@ -214,12 +235,10 @@ bool Memory::onEvent(ftxui::Event event) {
 
         if (pairsFound < total_pairs) {
           message = "Select first card";
-
           gameStatus = firstCard;
         } else {
           message = "Congratulations! You've found all pairs!";
           textStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
-
           gameStatus = finished;
         }
 
@@ -236,9 +255,11 @@ bool Memory::onEvent(ftxui::Event event) {
         gameStatus = turnNoMatch;
       }
 
-      change_blink(&blink, &timer, true, timerDuration);
+      return true;
 
     } else if (gameStatus == turnNoMatch) {
+      change_blink(&blink, &timer, false, timerDuration);
+
       revealed[temp_x][temp_y] = false; // Hide the first card again
       revealed[old_x][old_y] = false;   // Hide the second card again
 
@@ -250,7 +271,7 @@ bool Memory::onEvent(ftxui::Event event) {
 
       gameStatus = firstCard;
 
-      change_blink(&blink, &timer, false, timerDuration);
+      return true;
     }
   }
 
@@ -258,15 +279,46 @@ bool Memory::onEvent(ftxui::Event event) {
 }
 
 void Memory::async_blinking() {
+  old = std::chrono::steady_clock::now();
+
   while (running) {
     now = std::chrono::steady_clock::now();
     timer -= std::chrono::duration_cast<decltype(timer)>(now - old);
     old = now;
+
     if (timer.count() < 0.0) {
+      std::lock_guard<std::mutex> lock(mtx);
+
       timer = timerDuration;
       blink = !blink;
       screen.PostEvent(ftxui::Event::Custom);
     }
+
     std::this_thread::sleep_for(timerDuration);
   }
+}
+
+void Memory::slider_changed(const int *const temp_size) {
+  int old_size = *temp_size;
+
+  while (running && selection_stage) {
+    if (old_size != *temp_size) {
+      std::lock_guard<std::mutex> lock(mtx);
+
+      old_size = *temp_size;
+      size = old_size * 2;
+      total_pairs = std::pow(size, 2) / 2;
+
+      initializeBoard();
+
+      screen.PostEvent(ftxui::Event::Custom);
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+}
+
+void Memory::checkXY() {
+  current_x = std::clamp(current_x, 0, static_cast<std::int32_t>(size - 1));
+  current_y = std::clamp(current_y, 0, static_cast<std::int32_t>(size - 1));
 }
