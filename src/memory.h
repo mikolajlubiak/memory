@@ -46,7 +46,6 @@ private:
   bool onEvent(ftxui::Event event);
 
   void async_blinking();
-  void slider_changed(const int *const temp_size);
 
   void checkXY();
 

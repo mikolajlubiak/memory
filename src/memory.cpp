@@ -3,6 +3,7 @@
 
 // local
 #include "common.h"
+#include "slider_with_callback.h"
 
 // std
 #include <algorithm>
@@ -26,34 +27,45 @@ void Memory::run() {
 
   int temp_size = 2;
 
-  auto slider_handle =
-      std::async(std::launch::async, [&] { slider_changed(&temp_size); });
-
   auto selector_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-                       ftxui::Slider("Size:", &temp_size, 1, 5, 1),
+              ftxui::Slider(ftxui::SliderWithCallbackOption<int>{
+                  .callback =
+                      [&](int value) {
+                        std::lock_guard<std::mutex> lock(mtx);
 
-                       ftxui::Button("Select",
-                                     [&] {
-                                       std::lock_guard<std::mutex> lock(mtx);
+                        size = value * 2;
+                        total_pairs = std::pow(size, 2) / 2;
 
-                                       selection_stage = false;
+                        initializeBoard();
+                      },
+                  .value = &temp_size,
+                  .min = 1,
+                  .max = 5,
+                  .increment = 1,
+                  .color_active = ftxui::Color::White,
+                  .color_inactive = ftxui::Color::White,
+              }),
 
-                                       size = temp_size * 2;
+              ftxui::Button("Select",
+                            [&] {
+                              std::lock_guard<std::mutex> lock(mtx);
 
-                                       total_pairs = std::pow(size, 2) / 2;
-
-                                       initializeBoard();
-                                     }) |
-                           ftxui::center | ftxui::flex,
-                   }) |
-                   ftxui::flex,
+                              selection_stage = false;
+                            }) |
+                  ftxui::center | ftxui::flex,
+          }),
       }) |
-      ftxui::center | ftxui::flex;
+      ftxui::center;
 
-  auto main_loop = ftxui::Container::Stacked(
-      {ftxui::Maybe(selector_window, &selection_stage), renderer});
+  auto main_loop = ftxui::Container::Stacked({
+      // selection stage
+      ftxui::Maybe(selector_window, &selection_stage),
+
+      // game
+      renderer,
+  });
 
   screen.Loop(main_loop);
 }
@@ -127,17 +139,16 @@ ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
       // cell = cell | ftxui::center | ftxui::border | ftxui::bold |
       //       ftxui::size(ftxui::WIDTH, ftxui::EQUAL, 60 / size) |
       //       ftxui::size(ftxui::HEIGHT, ftxui::EQUAL, 30 / size);
-      cell =
-          cell | ftxui::center | ftxui::border | ftxui::bold |
-          ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 120.0f / size) |
-          ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN,
-                      120.0f / size) | // least common multiple of {2,4,6,8,10}
-          ftxui::flex;
+      cell = cell | ftxui::center | ftxui::border | ftxui::bold |
+             ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN,
+                         std::ceil(60.0f / size)) |
+             ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN,
+                         std::ceil(30.0f / size));
 
       cells[i][j] = cell;
     }
   }
-  return ftxui::gridbox(cells) | ftxui::center | ftxui::flex;
+  return ftxui::gridbox(cells) | ftxui::center;
 }
 
 // Function to check if the selected cards match
@@ -152,19 +163,18 @@ ftxui::Component Memory::createRenderer() {
 
 ftxui::Element Memory::createUI() {
   return ftxui::window(
-             ftxui::hbox({
-                 ftxui::text("Memory Game") |
-                     ftxui::color(ftxui::Color::Grey100) | ftxui::bold,
-                 ftxui::separator(),
+      ftxui::hbox({
+          ftxui::text("Memory Game") | ftxui::color(ftxui::Color::Grey100) |
+              ftxui::bold,
+          ftxui::separator(),
 
-                 ftxui::text("Pairs Found: "),
-                 ftxui::text(std::to_string(pairsFound)) | ftxui::blink,
-                 ftxui::separator(),
+          ftxui::text("Pairs Found: "),
+          ftxui::text(std::to_string(pairsFound)) | ftxui::blink,
+          ftxui::separator(),
 
-                 ftxui::text(message) | textStyle,
-             }) | ftxui::center,
-             CreateBoard(&current_x, &current_y, &blink)) |
-         ftxui::flex;
+          ftxui::text(message) | textStyle,
+      }) | ftxui::center,
+      CreateBoard(&current_x, &current_y, &blink));
 }
 
 ftxui::ComponentDecorator Memory::catchEvent() {
@@ -302,28 +312,6 @@ void Memory::async_blinking() {
     }
 
     std::this_thread::sleep_for(timerDuration + std::chrono::milliseconds(10));
-  }
-}
-
-void Memory::slider_changed(const int *const temp_size) {
-  int old_size = *temp_size;
-
-  while (running && selection_stage) {
-    if (old_size != *temp_size) {
-      {
-        std::lock_guard<std::mutex> lock(mtx);
-
-        old_size = *temp_size;
-        size = old_size * 2;
-        total_pairs = std::pow(size, 2) / 2;
-
-        initializeBoard();
-      }
-
-      screen.PostEvent(ftxui::Event::Custom);
-    }
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 }
 
