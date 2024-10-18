@@ -131,7 +131,7 @@ ftxui::Element Memory::CreateBoard(const std::int32_t *const current_x,
           cell | ftxui::center | ftxui::border | ftxui::bold |
           ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 120.0f / size) |
           ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN,
-                      120.0f / size) | // least common multiple if {2,4,6,8,10}
+                      120.0f / size) | // least common multiple of {2,4,6,8,10}
           ftxui::flex;
 
       cells[i][j] = cell;
