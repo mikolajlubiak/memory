@@ -282,15 +282,22 @@ void Memory::async_blinking() {
   old = std::chrono::steady_clock::now();
 
   while (running) {
-    now = std::chrono::steady_clock::now();
-    timer -= std::chrono::duration_cast<decltype(timer)>(now - old);
-    old = now;
-
-    if (timer.count() < 0.0) {
+    {
       std::lock_guard<std::mutex> lock(mtx);
 
-      timer = timerDuration;
-      blink = !blink;
+      now = std::chrono::steady_clock::now();
+      timer -= std::chrono::duration_cast<decltype(timer)>(now - old);
+      old = now;
+    }
+
+    if (timer.count() < 0.0) {
+      {
+        std::lock_guard<std::mutex> lock(mtx);
+
+        timer = timerDuration;
+        blink = !blink;
+      }
+
       screen.PostEvent(ftxui::Event::Custom);
     }
 
@@ -303,13 +310,15 @@ void Memory::slider_changed(const int *const temp_size) {
 
   while (running && selection_stage) {
     if (old_size != *temp_size) {
-      std::lock_guard<std::mutex> lock(mtx);
+      {
+        std::lock_guard<std::mutex> lock(mtx);
 
-      old_size = *temp_size;
-      size = old_size * 2;
-      total_pairs = std::pow(size, 2) / 2;
+        old_size = *temp_size;
+        size = old_size * 2;
+        total_pairs = std::pow(size, 2) / 2;
 
-      initializeBoard();
+        initializeBoard();
+      }
 
       screen.PostEvent(ftxui::Event::Custom);
     }
