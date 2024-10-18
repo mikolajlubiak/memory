@@ -10,11 +10,14 @@
 #include <chrono>
 #include <cmath>
 #include <future>
+#include <iterator>
 #include <mutex>
 #include <random>
 #include <thread>
 
 void Memory::run() {
+  debug_output.open("debug_output.txt", std::ios::app);
+
   screen.SetCursor(ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
 
   auto blinking_handle =
@@ -56,14 +59,68 @@ void Memory::run() {
                             }) |
                   ftxui::center | ftxui::flex,
           }),
+
+          .title = "Select board size",
+          .left = 0,
+          .width = 20,
+          .height = 8,
       }) |
-      ftxui::center;
+      ftxui::vcenter;
+
+  auto save_window =
+      ftxui::Window({
+          .inner = ftxui::Button("Save",
+                                 [&] {
+                                   std::lock_guard<std::mutex> lock(mtx);
+
+                                   saveState(get_timestamp_filename());
+                                 }) |
+                   ftxui::center | ftxui::flex,
+
+          .title = "Save game",
+          .width = 10,
+          .height = 5,
+      }) |
+      ftxui::align_right | ftxui::vcenter;
+
+  auto readable_saves_list = get_human_readable_file_list("saves/");
+  auto saves_list = get_file_list("saves/");
+  int selectedSave = 0;
+
+  auto load_select = [&] {
+    std::lock_guard<std::mutex> lock(mtx);
+
+    loadState(saves_list[selectedSave]);
+
+    selection_stage = false;
+  };
+
+  ftxui::MenuOption menu_load_option;
+  menu_load_option.on_enter = load_select;
+
+  auto menu_load = Menu(&readable_saves_list, &selectedSave, menu_load_option);
+
+  auto load_window =
+      ftxui::Window({
+          .inner = ftxui::Container::Vertical({
+              menu_load,
+              ftxui::Button("Load", load_select) | ftxui::center | ftxui::flex,
+          }),
+
+          .title = "Load game",
+          .width = 10 * (saves_list.size() / 2) + 15,
+          .height = 5 * (saves_list.size() / 3) + 7,
+      }) |
+      ftxui::align_right | ftxui::vcenter | ftxui::flex;
 
   auto main_loop = ftxui::Container::Stacked({
       // selection stage
       ftxui::Maybe(selector_window, &selection_stage),
+      ftxui::Maybe(load_window,
+                   [&] { return selection_stage && saves_list.size() != 0; }),
 
       // game
+      ftxui::Maybe(save_window, [&] { return !selection_stage; }),
       renderer,
   });
 
@@ -72,17 +129,7 @@ void Memory::run() {
 
 // Function to initialize the game board
 void Memory::initializeBoard() {
-  // Reset the game state
-  board.clear();
-  revealed.clear();
-  revealedColors.clear();
-
-  pairsFound = 0;
-  current_x = 0;
-  current_y = 0;
-  message = "Select first card";
-  textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
-  gameStatus = firstCard;
+  resetState();
 
   std::vector<char> cards;
   cards.reserve(total_pairs * 2);
@@ -98,9 +145,8 @@ void Memory::initializeBoard() {
   std::shuffle(cards.begin(), cards.end(), eng); // Shuffle the cards
 
   board.resize(size, std::vector<char>(size));
-  revealed.resize(size, std::vector<bool>(size, false));
-  revealedColors.resize(
-      size, std::vector<ftxui::Color>(size, ftxui::Color::YellowLight));
+  revealed.resize(size, std::vector<bool>(size));
+  revealedColors.resize(size, std::vector<ftxui::Color>(size));
 
   // Fill the boards
   for (int i = 0; i < size; ++i) {
@@ -158,7 +204,7 @@ bool Memory::checkMatch(std::uint32_t x1, std::uint32_t y1, std::uint32_t x2,
 }
 
 ftxui::Component Memory::createRenderer() {
-  return ftxui::Renderer([this] { return createUI(); });
+  return ftxui::Renderer([this](bool focus) { return createUI(); });
 }
 
 ftxui::Element Memory::createUI() {
@@ -220,18 +266,24 @@ bool Memory::onEvent(ftxui::Event event) {
     if (gameStatus == firstCard) {
       change_blink(&blink, &timer, true, timerDuration);
 
+      if (revealed[current_x][current_y]) {
+        return true;
+      }
+
       revealed[current_x][current_y] = true;
       old_x = current_x;
       old_y = current_y;
-      message = "Select second card";
+
       gameStatus = secondCard;
+      gameStateTextAndStyle();
 
       return true;
 
     } else if (gameStatus == secondCard) {
       change_blink(&blink, &timer, true, timerDuration);
 
-      if (old_x == current_x && old_y == current_y) {
+      if ((old_x == current_x && old_y == current_y) ||
+          revealed[current_x][current_y]) {
         return true;
       }
 
@@ -244,25 +296,22 @@ bool Memory::onEvent(ftxui::Event event) {
         revealedColors[old_x][old_y] = ftxui::Color::Green;
 
         if (pairsFound < total_pairs) {
-          message = "Select first card";
           gameStatus = firstCard;
+          gameStateTextAndStyle();
         } else {
-          message = "Congratulations! You've found all pairs!";
-          textStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
           gameStatus = finished;
+          gameStateTextAndStyle();
         }
 
       } else {
         revealedColors[current_x][current_y] = ftxui::Color::Red;
         revealedColors[old_x][old_y] = ftxui::Color::Red;
 
-        message = "Cards don't match. Press enter to continue...";
-        textStyle = ftxui::underlinedDouble | ftxui::color(ftxui::Color::Red);
-
         temp_x = current_x;
         temp_y = current_y;
 
         gameStatus = turnNoMatch;
+        gameStateTextAndStyle();
       }
 
       return true;
@@ -276,10 +325,8 @@ bool Memory::onEvent(ftxui::Event event) {
       revealedColors[temp_x][temp_y] = ftxui::Color::YellowLight;
       revealedColors[old_x][old_y] = ftxui::Color::YellowLight;
 
-      message = "Select first card";
-      textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
-
       gameStatus = firstCard;
+      gameStateTextAndStyle();
 
       return true;
     }
@@ -318,4 +365,136 @@ void Memory::async_blinking() {
 void Memory::checkXY() {
   current_x = std::clamp(current_x, 0, static_cast<std::int32_t>(size - 1));
   current_y = std::clamp(current_y, 0, static_cast<std::int32_t>(size - 1));
+}
+
+void Memory::saveState(const std::string &filename) {
+
+  if (gameStatus == turnNoMatch) {
+    revealed[temp_x][temp_y] = false; // Hide the first card again
+    revealed[old_x][old_y] = false;   // Hide the second card again
+
+    revealedColors[temp_x][temp_y] = ftxui::Color::YellowLight;
+    revealedColors[old_x][old_y] = ftxui::Color::YellowLight;
+
+    gameStatus = firstCard;
+    gameStateTextAndStyle();
+  }
+
+  std::ofstream file(filename, std::ios::binary);
+
+  if (!file.is_open()) {
+    debug_output << "Unable to open file: " << filename << std::endl;
+    return;
+  }
+
+  std::size_t message_size = message.size();
+
+  file.write(reinterpret_cast<const char *>(&size), sizeof(size));
+  file.write(reinterpret_cast<const char *>(&gameStatus), sizeof(gameStatus));
+  file.write(reinterpret_cast<const char *>(&pairsFound), sizeof(pairsFound));
+
+  // No need to store the message
+  /*
+  file.write(reinterpret_cast<const char *>(&message_size),
+             sizeof(message_size));
+  file.write(reinterpret_cast<const char *>(&message[0]),
+             message_size * sizeof(char));
+  */
+
+  for (int i = 0; i < size; i++) {
+    file.write(reinterpret_cast<const char *>(&board[i][0]),
+               board[i].size() * sizeof(board[i][0]));
+
+    file.write(reinterpret_cast<const char *>(&revealedColors[i][0]),
+               revealedColors[i].size() * sizeof(revealedColors[i][0]));
+
+    for (int j = 0; j < size; j++) {
+      char temp = static_cast<char>(revealed[i][j]);
+      file.write(reinterpret_cast<const char *>(&temp), sizeof(temp));
+    }
+  }
+
+  file.close();
+}
+
+void Memory::loadState(const std::string &filename) {
+  std::ifstream file(filename, std::ios::binary);
+
+  if (!file.is_open()) {
+
+    debug_output << "Unable to open file: " << filename << std::endl;
+    return;
+  }
+
+  std::size_t message_size;
+
+  file.read(reinterpret_cast<char *>(&size), sizeof(size));
+  file.read(reinterpret_cast<char *>(&gameStatus), sizeof(gameStatus));
+  file.read(reinterpret_cast<char *>(&pairsFound), sizeof(pairsFound));
+
+  /*
+  file.read(reinterpret_cast<char *>(&message_size), sizeof(message_size));
+  file.read(reinterpret_cast<char *>(&message[0]), message_size * sizeof(char));
+  */
+
+  total_pairs = std::pow(size, 2) / 2;
+  gameStateTextAndStyle();
+
+  board.resize(size, std::vector<char>(size));
+  revealed.resize(size, std::vector<bool>(size));
+  revealedColors.resize(size, std::vector<ftxui::Color>(size));
+
+  for (int i = 0; i < size; i++) {
+    file.read(reinterpret_cast<char *>(&board[i][0]),
+              size * sizeof(board[i][0]));
+
+    file.read(reinterpret_cast<char *>(&revealedColors[i][0]),
+              size * sizeof(revealedColors[i][0]));
+
+    for (int j = 0; j < size; j++) {
+      char temp;
+      file.read(reinterpret_cast<char *>(&temp), sizeof(temp));
+      revealed[i][j] = static_cast<bool>(temp);
+    }
+  }
+
+  file.close();
+}
+
+void Memory::resetState() {
+  // Reset the game state
+  board.clear();
+  revealed.clear();
+  revealedColors.clear();
+
+  pairsFound = 0;
+  current_x = 0;
+  current_y = 0;
+  gameStatus = firstCard;
+  gameStateTextAndStyle();
+}
+
+void Memory::gameStateTextAndStyle() {
+  switch (gameStatus) {
+  case firstCard:
+    message = "Select first card";
+    textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
+    break;
+  case secondCard:
+    message = "Select second card";
+    textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
+    break;
+  case finished:
+    message = "Congratulations! You've found all pairs!";
+    textStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
+    break;
+  case turnNoMatch:
+    message = "Cards don't match. Press enter to continue...";
+    textStyle = ftxui::underlinedDouble | ftxui::color(ftxui::Color::Red);
+    break;
+  default:
+    message = "Select first card";
+    textStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
+    break;
+  }
 }

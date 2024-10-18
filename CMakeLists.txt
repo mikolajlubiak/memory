@@ -28,6 +28,8 @@ file(GLOB_RECURSE HEADERS
 	src/*.h
 )
 
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/saves")
+
 # Add binary
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

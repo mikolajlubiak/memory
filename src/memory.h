@@ -11,6 +11,8 @@
 // std
 #include <cmath>
 #include <cstdint>
+#include <fstream>
+#include <string>
 #include <vector>
 
 class Memory {
@@ -18,12 +20,13 @@ public:
   enum gameStatusEnum {
     firstCard,
     secondCard,
-    turnMatch,
     turnNoMatch,
     finished,
   };
 
   void run();
+
+  ~Memory() { debug_output.close(); }
 
 private:
   // Function to initialize the game board
@@ -48,6 +51,14 @@ private:
   void async_blinking();
 
   void checkXY();
+
+  void saveState(const std::string &filename);
+
+  void loadState(const std::string &filename);
+
+  void resetState();
+
+  void gameStateTextAndStyle();
 
   std::uint32_t size = 4; // Size of the board
 
@@ -91,4 +102,6 @@ private:
   ftxui::Component renderer;
 
   std::mutex mtx;
+
+  std::ofstream debug_output;
 };

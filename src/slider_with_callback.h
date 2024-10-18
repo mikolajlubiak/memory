@@ -45,7 +45,7 @@ Decorator flexDirection(Direction direction) {
   return xflex; // NOT_REACHED()
 }
 
-// @brief Option for the `Slider` component.
+// @brief Option for the `SliderWithCallback` component.
 // @ingroup component
 template <typename T> struct SliderWithCallbackOption {
   std::function<void(T)> callback;
