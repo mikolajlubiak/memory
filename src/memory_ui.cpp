@@ -163,6 +163,9 @@ ftxui::ComponentDecorator MemoryUI::HandleEvents() {
       m_Screen.ExitLoopClosure()();
       m_ShouldRun = false;
       return true;
+    } else if (event == ftxui::Event::Character('r')) {
+      m_pGameLogic->InitializeBoard();
+      return true;
     }
 
     if (event == ftxui::Event::ArrowUp) {
@@ -219,7 +222,7 @@ ftxui::Element MemoryUI::CreateUI() {
           ftxui::separator(),
 
           ftxui::text("Cards matched: "),
-          ftxui::text(std::to_string(m_pGameLogic->GetPairsFoundCount())) |
+          ftxui::text(std::to_string(m_pGameLogic->GetMatchedCardsCount())) |
               ftxui::blink,
           ftxui::separator(),
 

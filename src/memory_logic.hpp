@@ -75,7 +75,7 @@ public:
   }
 
   // Return count of found pairs for current player
-  std::uint32_t GetPairsFoundCount() {
+  std::uint32_t GetMatchedCardsCount() {
     return m_PlayersMatchedCardsCount[m_PlayerIndex];
   }
 
@@ -114,10 +114,10 @@ public:
   // Return game status
   GameStatus GetGameStatus() { return m_GameStatus; }
 
-private: // Methods
   // Initialize random game board
   void InitializeBoard();
 
+private: // Methods
   // Check if the selected cards match
   bool CheckMatch(std::uint32_t x1, std::uint32_t y1, std::uint32_t x2,
                   std::uint32_t y2);
