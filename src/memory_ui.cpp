@@ -62,7 +62,7 @@ void MemoryUI::MainGame() {
                             ftxui::SliderOption<std::int32_t>{
                                 .value = &player_count,
                                 .min = 1,
-                                .max = 10,
+                                .max = 5,
                                 .increment = 1,
                                 .color_active = ftxui::Color::YellowLight,
                                 .color_inactive = ftxui::Color::YellowLight,
