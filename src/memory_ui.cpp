@@ -33,9 +33,11 @@ MemoryUI::MemoryUI() {
 
 // Create all needed components and loop
 void MemoryUI::MainGame() {
-  // Select options
-  std::int32_t player_count = 2;
+  std::int32_t player_count = m_pGameLogic->GetPlayerCount();
 
+  bool m_IsSelectionStage = true; // Is the size selected (NOT)
+
+  // Select options
   auto options_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
@@ -161,7 +163,6 @@ ftxui::ComponentDecorator MemoryUI::HandleEvents() {
   return ftxui::CatchEvent([this](ftxui::Event event) {
     if (event == ftxui::Event::Character('q')) {
       m_Screen.ExitLoopClosure()();
-      m_ShouldRun = false;
       return true;
     } else if (event == ftxui::Event::Character('r')) {
       m_pGameLogic->InitializeBoard();

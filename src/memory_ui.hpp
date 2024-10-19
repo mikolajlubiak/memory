@@ -50,10 +50,6 @@ private: // Methods
 private:                         // Attributes
   std::uint32_t m_BoardSize = 4; // Size of the board
 
-  bool m_ShouldRun = true; // Should the app be running
-
-  bool m_IsSelectionStage = true; // Is the size selected (NOT)
-
   // Current cursor position
   std::int32_t m_CurrentX = 0;
   std::int32_t m_CurrentY = 0;
