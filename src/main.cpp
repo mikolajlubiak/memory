@@ -1,13 +1,11 @@
 // local
-#include "common.h"
-#include "memory.h"
+#include "common.hpp"
+#include "memory_ui.hpp"
 
 // Main game loop
 int main() {
 
-  Memory game{};
-
-  game.run();
+  memory_game::MemoryUI game{};
 
   return 0;
 }

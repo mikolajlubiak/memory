@@ -1,16 +1,9 @@
 // header
-#include "common.h"
+#include "common.hpp"
 
 // std
 #include <ctime>
 #include <filesystem>
-
-void change_blink(bool *const pBlink, std::chrono::milliseconds *const pTimer,
-                  const bool blink_or_not,
-                  std::chrono::milliseconds &timerDuration) {
-  *pBlink = blink_or_not;
-  *pTimer = timerDuration;
-}
 
 std::string get_timestamp_filename() {
   auto now = std::chrono::system_clock::now();
@@ -48,15 +41,4 @@ get_human_readable_file_list(const std::string &directory) {
     }
   }
   return file_list;
-}
-
-ftxui::Element file_list_to_element_list(std::vector<std::string> file_list) {
-  std::vector<ftxui::Element> elements;
-  elements.reserve(file_list.size());
-
-  for (auto file : file_list) {
-    elements.emplace_back(ftxui::text(get_human_readable_timestamp(file)));
-  }
-
-  return ftxui::vbox(elements);
 }
