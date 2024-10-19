@@ -35,39 +35,56 @@ MemoryUI::MemoryUI() {
 
 // Create all needed components and loop
 void MemoryUI::MainGame() {
-  auto selector_window =
+  // Select options
+  std::int32_t player_count = 2;
+
+  auto options_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-              ftxui::Slider(ftxui::SliderWithCallbackOption<int>{
-                  .callback =
-                      [&](int value) {
-                        std::lock_guard<std::mutex> lock(m_Lock);
+              ftxui::Slider("Board size",
+                            ftxui::SliderWithCallbackOption<std::int32_t>{
+                                .callback =
+                                    [&](std::int32_t board_size) {
+                                      std::lock_guard<std::mutex> lock(m_Lock);
 
-                        m_BoardSize = value * 2;
+                                      m_BoardSize = static_cast<std::uint32_t>(
+                                                        board_size) *
+                                                    2;
 
-                        m_pGameLogic =
-                            std::make_unique<MemoryLogic>(m_BoardSize);
-                      },
-                  .value = 2,
-                  .min = 1,
-                  .max = 5,
-                  .increment = 1,
-                  .color_active = ftxui::Color::White,
-                  .color_inactive = ftxui::Color::White,
-              }),
+                                      m_pGameLogic->SetBoardSize(m_BoardSize);
+                                    },
+                                .value = 2,
+                                .min = 1,
+                                .max = 5,
+                                .increment = 1,
+                                .color_active = ftxui::Color::White,
+                                .color_inactive = ftxui::Color::White,
+                            }),
+
+              ftxui::Slider("Player count",
+                            ftxui::SliderOption<std::int32_t>{
+                                .value = &player_count,
+                                .min = 1,
+                                .max = 10,
+                                .increment = 1,
+                                .color_active = ftxui::Color::White,
+                                .color_inactive = ftxui::Color::White,
+                            }),
 
               ftxui::Button("Select",
                             [&] {
                               std::lock_guard<std::mutex> lock(m_Lock);
+
+                              m_pGameLogic->SetPlayerCount(
+                                  static_cast<std::uint32_t>(player_count));
 
                               m_IsSelectionStage = false;
                             }) |
                   ftxui::center | ftxui::flex,
           }),
 
-          .title = "Select board size",
+          .title = "Options",
           .left = 0,
-          .width = 20,
           .height = 8,
       }) |
       ftxui::vcenter;
@@ -125,7 +142,7 @@ void MemoryUI::MainGame() {
 
   auto main_game_component = ftxui::Container::Stacked({
       // selection stage
-      ftxui::Maybe(selector_window, &m_IsSelectionStage),
+      ftxui::Maybe(options_window, &m_IsSelectionStage),
       ftxui::Maybe(
           load_window,
           [&] { return m_IsSelectionStage && saves_list.size() != 0; }),

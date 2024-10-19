@@ -101,6 +101,6 @@ private:                         // Attributes
   std::ofstream m_DebugStream;
 
   // Handle the game logic
-  std::unique_ptr<MemoryLogic> m_pGameLogic;
+  std::unique_ptr<MemoryLogic> m_pGameLogic = std::make_unique<MemoryLogic>();
 };
 } // namespace memory_game

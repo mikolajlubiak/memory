@@ -21,7 +21,29 @@ enum class GameStatus : std::uint32_t {
 // Handle game logic
 class MemoryLogic {
 public:
+  MemoryLogic() = default;
+
   MemoryLogic(std::uint32_t board_size) : m_BoardSize(board_size) {
+    // Set total number of cards for given size
+    m_TotalCards = std::pow(m_BoardSize, 2);
+
+    // Initialize the board and game state
+    InitializeBoard();
+  }
+
+  MemoryLogic(std::uint32_t board_size, std::uint32_t player_count)
+      : m_BoardSize(board_size), m_PlayersCount(player_count) {
+    // Set total number of cards for given size
+    m_TotalCards = std::pow(m_BoardSize, 2);
+
+    // Initialize the board and game state
+    InitializeBoard();
+  }
+
+  // Set board size
+  void SetBoardSize(std::uint32_t board_size) {
+    m_BoardSize = board_size;
+
     // Set total number of cards for given size
     m_TotalCards = std::pow(m_BoardSize, 2);
 
@@ -55,10 +77,18 @@ public:
     return std::distance(m_PlayersMatchedCardsCount.begin(),
                          std::max_element(m_PlayersMatchedCardsCount.begin(),
                                           m_PlayersMatchedCardsCount.end()));
-    }
+  }
 
   // Return current players index
   std::uint32_t GetCurrentPlayerIndex() { return m_PlayerIndex; }
+
+  // Set player count
+  void SetPlayerCount(std::uint32_t player_count) {
+    m_PlayersCount = player_count;
+
+    // Initialize the board and game state
+    InitializeBoard();
+  }
 
   // Return game status
   GameStatus GetGameStatus() { return m_GameStatus; }
