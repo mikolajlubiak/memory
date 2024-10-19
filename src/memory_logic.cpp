@@ -10,18 +10,12 @@
 namespace memory_game {
 
 MemoryLogic::MemoryLogic(std::uint32_t board_size) : m_BoardSize(board_size) {
-  // Set total number of cards for given size
-  m_TotalCards = std::pow(m_BoardSize, 2);
-
   // Initialize the board and game state
   InitializeBoard();
 }
 
 MemoryLogic::MemoryLogic(std::uint32_t board_size, std::uint32_t player_count)
     : m_BoardSize(board_size), m_PlayersCount(player_count) {
-  // Set total number of cards for given size
-  m_TotalCards = std::pow(m_BoardSize, 2);
-
   // Initialize the board and game state
   InitializeBoard();
 }
@@ -29,9 +23,6 @@ MemoryLogic::MemoryLogic(std::uint32_t board_size, std::uint32_t player_count)
 // Set board size
 void MemoryLogic::SetBoardSize(std::uint32_t board_size) {
   m_BoardSize = board_size;
-
-  // Set total number of cards for given size
-  m_TotalCards = std::pow(m_BoardSize, 2);
 
   // Initialize the board and game state
   InitializeBoard();
@@ -94,7 +85,7 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
       if (std::reduce(m_PlayersMatchedCardsCount.begin(),
                       m_PlayersMatchedCardsCount.end()) *
               2 <
-          m_TotalCards) {
+          GetTotalCardsCount()) {
         m_GameStatus = GameStatus::selectingFirstCard;
       } else {
         m_GameStatus = GameStatus::gameFinished;
@@ -133,9 +124,9 @@ void MemoryLogic::InitializeBoard() {
 
   // Generate cards
   std::vector<char> cards;
-  cards.resize(m_TotalCards);
+  cards.resize(GetTotalCardsCount());
 
-  for (int i = 0; i < m_TotalCards; i += 2) {
+  for (int i = 0; i < cards.size(); i += 2) {
     char c = 'A' + i / 2;
     cards[i] = c;
     cards[i + 1] = c;
@@ -272,9 +263,6 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
   // Load cursor state
   file.read(reinterpret_cast<char *>(&m_PreviousX), sizeof(m_PreviousX));
   file.read(reinterpret_cast<char *>(&m_PreviousY), sizeof(m_PreviousY));
-
-  // Set total number of cards for given size
-  m_TotalCards = std::pow(m_BoardSize, 2);
 
   // Resize the vectors to fit the board size
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));

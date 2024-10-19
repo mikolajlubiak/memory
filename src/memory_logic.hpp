@@ -63,8 +63,11 @@ public:
   // Return current players index
   std::uint32_t GetCurrentPlayerIndex() { return m_PlayerIndex; }
 
-  // Return current players index
+  // Return number of players
   std::uint32_t GetPlayerCount() { return m_PlayersCount; }
+
+  // Return total number of cards
+  std::uint32_t GetTotalCardsCount() { return std::pow(m_BoardSize, 2); }
 
   // Set player count
   void SetPlayerCount(std::uint32_t player_count) {
@@ -99,8 +102,7 @@ private:                                    // Attributes
       m_HasCardBeenMatched{}; // 2D vector stroing whether a card has been
                               // matched
 
-  std::uint32_t m_BoardSize = 4;                         // Size of the board
-  std::uint32_t m_TotalCards = std::pow(m_BoardSize, 2); // Total number cards
+  std::uint32_t m_BoardSize = 4; // Size of the board
 
   GameStatus m_GameStatus =
       GameStatus::selectingFirstCard; // Current game status
