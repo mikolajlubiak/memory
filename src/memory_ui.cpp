@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
+#include <format>
 #include <future>
 #include <iterator>
 #include <mutex>
@@ -124,6 +125,7 @@ void MemoryUI::MainGame() {
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
                        menu_load,
+                       ftxui::Renderer([] { return ftxui::separator(); }),
                        ftxui::Button("Load", load_select) | ftxui::center |
                            ftxui::flex,
                    }) |
@@ -131,7 +133,7 @@ void MemoryUI::MainGame() {
 
           .title = "Load game",
           .width = static_cast<int>(10 * (saves_list.size() / 2) + 15),
-          .height = static_cast<int>(5 * (saves_list.size() / 3) + 7),
+          .height = static_cast<int>(5 * (saves_list.size() / 3) + 8),
       }) |
       ftxui::align_right | ftxui::vcenter | ftxui::flex;
 
