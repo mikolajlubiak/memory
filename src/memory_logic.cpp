@@ -207,7 +207,7 @@ void MemoryLogic::SaveState(const std::string &filename) {
   file.write(reinterpret_cast<const char *>(&m_PlayerIndex),
              sizeof(m_PlayerIndex));
 
-  // Save cursor state
+  // Save selected card
   file.write(reinterpret_cast<const char *>(&m_PreviousX), sizeof(m_PreviousX));
   file.write(reinterpret_cast<const char *>(&m_PreviousY), sizeof(m_PreviousY));
 
@@ -267,6 +267,7 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
   // Resize the vectors to fit the board size
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
   m_HasCardBeenRevealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
+  m_HasCardBeenMatched.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
 
   // Resize vector to fit number of players
   m_PlayersMatchedCardsCount.resize(m_PlayersCount);

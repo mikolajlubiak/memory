@@ -72,9 +72,6 @@ public:
   // Set player count
   void SetPlayerCount(std::uint32_t player_count) {
     m_PlayersCount = player_count;
-
-    // Initialize the board and game state
-    InitializeBoard();
   }
 
   // Return game status
