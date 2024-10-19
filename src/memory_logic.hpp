@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -79,10 +80,24 @@ public:
   }
 
   // Player with most matched cards
-  std::uint32_t GetWinner() {
-    return std::distance(m_PlayersMatchedCardsCount.begin(),
-                         std::max_element(m_PlayersMatchedCardsCount.begin(),
-                                          m_PlayersMatchedCardsCount.end()));
+  std::vector<std::uint32_t> GetWinners() {
+    if (m_PlayersMatchedCardsCount.empty()) {
+      return {};
+    }
+
+    // Find the maximum value
+    std::uint32_t maxVal = *std::max_element(m_PlayersMatchedCardsCount.begin(),
+                                             m_PlayersMatchedCardsCount.end());
+
+    // Find all indices of the maximum value
+    std::set<std::uint32_t> indices;
+    for (std::uint32_t i = 0; i < m_PlayersMatchedCardsCount.size(); i++) {
+      if (m_PlayersMatchedCardsCount[i] == maxVal) {
+        indices.insert(i);
+      }
+    }
+
+    return std::vector<std::uint32_t>(indices.begin(), indices.end());
   }
 
   // Return current players index

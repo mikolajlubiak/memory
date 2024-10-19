@@ -279,8 +279,24 @@ void MemoryUI::MessageAndStyleFromGameState() {
     m_TextStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
     break;
   case GameStatus::gameFinished:
-    m_Message = std::format("Player {} won. Congratulations!",
-                            m_pGameLogic->GetWinner() + 1);
+    if (m_pGameLogic->GetWinners().size() == 1) {
+      m_Message = std::format("Player {} won. Congratulations!",
+                              m_pGameLogic->GetWinners()[0] + 1);
+    } else {
+      // Handle multiple winners
+      std::string winnerNames;
+      for (const auto &winner : m_pGameLogic->GetWinners()) {
+        winnerNames += std::to_string(winner + 1) + ", ";
+      }
+
+      // Remove trailing comma and space
+      if (!winnerNames.empty()) {
+        winnerNames.pop_back();
+        winnerNames.pop_back();
+      }
+
+      m_Message = std::format("Players {} won. Congratulations!", winnerNames);
+    }
 
     m_TextStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
     break;
