@@ -133,8 +133,8 @@ void MemoryUI::MainGame() {
                    ftxui::color(ftxui::Color::Cyan),
 
           .title = "Load game",
-          .width = static_cast<int>(10 * (saves_list.size() / 2) + 15),
-          .height = static_cast<int>(5 * (saves_list.size() / 3) + 8),
+          .width = 25,
+          .height = static_cast<int>(saves_list.size()) + 7,
       }) |
       ftxui::align_right | ftxui::vcenter | ftxui::flex;
 
