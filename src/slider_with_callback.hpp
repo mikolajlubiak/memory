@@ -455,57 +455,6 @@ private:
   CapturedMouse captured_mouse_;
 };
 
-class SliderWithLabelAndCallback : public ComponentBase {
-public:
-  SliderWithLabelAndCallback(ConstStringRef label, Component inner)
-      : label_(std::move(label)) {
-    Add(std::move(inner));
-    SetActiveChild(ChildAt(0));
-  }
-
-private:
-  bool OnEvent(Event event) final {
-    if (ComponentBase::OnEvent(event)) {
-      return true;
-    }
-
-    if (!event.is_mouse()) {
-      return false;
-    }
-
-    mouse_hover_ = box_.Contain(event.mouse().x, event.mouse().y);
-
-    if (!mouse_hover_) {
-      return false;
-    }
-
-    if (!CaptureMouse(event)) {
-      return false;
-    }
-
-    return true;
-  }
-
-  Element Render() override {
-    auto focus_management = Focused() ? focus : Active() ? select : nothing;
-    auto gauge_color = (Focused() || mouse_hover_) ? color(Color::White)
-                                                   : color(Color::GrayDark);
-    return hbox({
-               text(label_()) | dim | vcenter,
-               hbox({
-                   text("["),
-                   ComponentBase::Render() | underlined,
-                   text("]"),
-               }) | xflex,
-           }) |
-           gauge_color | xflex | reflect(box_) | focus_management;
-  }
-
-  ConstStringRef label_;
-  Box box_;
-  bool mouse_hover_ = false;
-};
-
 } // namespace
 
 // Base slider with label
