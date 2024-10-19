@@ -100,7 +100,7 @@ void MemoryUI::MainGame() {
               ftxui::center | ftxui::flex | ftxui::color(ftxui::Color::Cyan),
 
           .title = "Save game",
-          .width = 10,
+          .width = 12,
           .height = 5,
       }) |
       ftxui::align_right | ftxui::vcenter;
