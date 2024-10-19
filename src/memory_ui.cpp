@@ -216,13 +216,11 @@ ftxui::Element MemoryUI::CreateUI() {
               ftxui::bold,
           ftxui::separator(),
 
-          ftxui::text("Player "),
-          ftxui::text(
-              std::to_string(m_pGameLogic->GetCurrentPlayerIndex() + 1)),
-          ftxui::text(" turn"),
+          ftxui::text(std::format("Player's {} turn",
+                                  m_pGameLogic->GetCurrentPlayerIndex() + 1)),
           ftxui::separator(),
 
-          ftxui::text("Pairs Found: "),
+          ftxui::text("Cards matched: "),
           ftxui::text(std::to_string(m_pGameLogic->GetPairsFoundCount())) |
               ftxui::blink,
           ftxui::separator(),
