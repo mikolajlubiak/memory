@@ -103,7 +103,7 @@ void MemoryUI::MainGame() {
           .width = 12,
           .height = 5,
       }) |
-      ftxui::align_right | ftxui::vcenter;
+      ftxui::vcenter;
 
   auto readable_saves_list = get_human_readable_file_list("saves/");
   auto saves_list = get_file_list("saves/");
@@ -141,11 +141,9 @@ void MemoryUI::MainGame() {
   auto main_game_component = ftxui::Container::Stacked({
       // selection stage
       ftxui::Maybe(options_window, &m_IsSelectionStage),
-      ftxui::Maybe(
-          load_window,
-          [&] { return m_IsSelectionStage && saves_list.size() != 0; }),
 
       // game
+      ftxui::Maybe(load_window, [&] { return saves_list.size() > 0; }),
       ftxui::Maybe(save_window, [&] { return !m_IsSelectionStage; }),
       m_Renderer,
   });
