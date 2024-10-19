@@ -9,7 +9,7 @@
 
 namespace memory_game {
 
-bool MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
+void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
   // Check whether the coordinates exceed board size
   if (current_x > m_BoardSize || current_y > m_BoardSize) {
     std::ofstream debug_stream("debug_output.txt",
@@ -20,22 +20,22 @@ bool MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
                  << std::endl;
 
     debug_stream.close();
-    return false;
+    return;
   }
 
   // If game is finished do nothing
   if (m_GameStatus == GameStatus::gameFinished) {
-    return false;
+    return;
   }
 
   if (m_GameStatus == GameStatus::selectingFirstCard) {
     // If the card is already revlead: return
-    if (m_Revealed[current_x][current_y]) {
-      return true;
+    if (m_HasCardBeenRevealed[current_x][current_y]) {
+      return;
     }
 
     // Reveal card
-    m_Revealed[current_x][current_y] = true;
+    m_HasCardBeenRevealed[current_x][current_y] = true;
 
     // Store the card coordinates for next stage
     m_PreviousX = current_x;
@@ -44,19 +44,22 @@ bool MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
     // Precede to next stage
     m_GameStatus = GameStatus::selectingSecondCard;
 
-    return true;
+    return;
 
   } else if (m_GameStatus == GameStatus::selectingSecondCard) {
     // If the card is already revlead: return
-    if (m_Revealed[current_x][current_y]) {
-      return true;
+    if (m_HasCardBeenRevealed[current_x][current_y]) {
+      return;
     }
 
     // Reveal card
-    m_Revealed[current_x][current_y] = true;
+    m_HasCardBeenRevealed[current_x][current_y] = true;
 
     // Check if the cards match
     if (CheckMatch(current_x, current_y, m_PreviousX, m_PreviousY)) {
+      m_HasCardBeenMatched[current_x][current_y] = true;
+      m_HasCardBeenMatched[m_PreviousX][m_PreviousY] = true;
+
       m_PlayersMatchedCardsCount[m_PlayerIndex]++;
 
       // Check if all cards are matched
@@ -82,20 +85,18 @@ bool MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
       m_GameStatus = GameStatus::cardsDidntMatch;
     }
 
-    return true;
+    return;
 
   } else if (m_GameStatus == GameStatus::cardsDidntMatch) {
     // Hide cards after they didn't match
-    m_Revealed[m_TempX][m_TempY] = false;
-    m_Revealed[m_PreviousX][m_PreviousY] = false;
+    m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
+    m_HasCardBeenRevealed[m_PreviousX][m_PreviousY] = false;
 
     // Go back to first card selection stage
     m_GameStatus = GameStatus::selectingFirstCard;
 
-    return false;
+    return;
   }
-
-  return false;
 }
 
 void MemoryLogic::InitializeBoard() {
@@ -119,7 +120,10 @@ void MemoryLogic::InitializeBoard() {
 
   // Initialize and fill the vectors
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
-  m_Revealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize, false));
+  m_HasCardBeenRevealed.resize(m_BoardSize,
+                               std::vector<bool>(m_BoardSize, false));
+  m_HasCardBeenMatched.resize(m_BoardSize,
+                              std::vector<bool>(m_BoardSize, false));
   m_PlayersMatchedCardsCount.resize(m_PlayersCount, 0);
 
   for (int i = 0; i < m_BoardSize; ++i) {
@@ -137,7 +141,8 @@ bool MemoryLogic::CheckMatch(std::uint32_t x1, std::uint32_t y1,
 void MemoryLogic::ResetState() {
   // Clear vectors
   m_Board.clear();
-  m_Revealed.clear();
+  m_HasCardBeenRevealed.clear();
+  m_HasCardBeenMatched.clear();
   m_PlayersMatchedCardsCount.clear();
 
   // Reset game state
@@ -153,8 +158,8 @@ void MemoryLogic::SaveState(const std::string &filename) {
   // `m_Revealed[m_TempX][m_TempY]` wouldn't hide since
   // m_TempX and m_TempY are not stored.
   if (m_GameStatus == GameStatus::cardsDidntMatch) {
-    m_Revealed[m_TempX][m_TempY] = false;
-    m_Revealed[m_PreviousX][m_PreviousY] = false;
+    m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
+    m_HasCardBeenRevealed[m_PreviousX][m_PreviousY] = false;
 
     m_GameStatus = GameStatus::selectingFirstCard;
   }
@@ -198,8 +203,14 @@ void MemoryLogic::SaveState(const std::string &filename) {
                m_Board[i].size() * sizeof(m_Board[i][0]));
 
     // Save which cards are revealed
-    for (int j = 0; j < m_BoardSize; j++) {
-      char temp = static_cast<char>(m_Revealed[i][j]);
+    for (int j = 0; j < m_HasCardBeenRevealed.size(); j++) {
+      char temp = static_cast<char>(m_HasCardBeenRevealed[i][j]);
+      file.write(reinterpret_cast<const char *>(&temp), sizeof(temp));
+    }
+
+    // Save which cards are matched
+    for (int j = 0; j < m_HasCardBeenMatched.size(); j++) {
+      char temp = static_cast<char>(m_HasCardBeenMatched[i][j]);
       file.write(reinterpret_cast<const char *>(&temp), sizeof(temp));
     }
   }
@@ -239,7 +250,7 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
 
   // Resize the vectors to fit the board size
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
-  m_Revealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
+  m_HasCardBeenRevealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
 
   // Resize vector to fit number of players
   m_PlayersMatchedCardsCount.resize(m_PlayersCount);
@@ -255,10 +266,17 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
               m_Board.size() * sizeof(m_Board[i][0]));
 
     // Load which cards should be revealed
-    for (int j = 0; j < m_Revealed.size(); j++) {
+    for (int j = 0; j < m_HasCardBeenRevealed.size(); j++) {
       char temp;
       file.read(reinterpret_cast<char *>(&temp), sizeof(temp));
-      m_Revealed[i][j] = static_cast<bool>(temp);
+      m_HasCardBeenRevealed[i][j] = static_cast<bool>(temp);
+    }
+
+    // Load which cards are matched
+    for (int j = 0; j < m_HasCardBeenMatched.size(); j++) {
+      char temp;
+      file.read(reinterpret_cast<char *>(&temp), sizeof(temp));
+      m_HasCardBeenMatched[i][j] = static_cast<bool>(temp);
     }
   }
 

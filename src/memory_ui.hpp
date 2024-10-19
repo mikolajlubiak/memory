@@ -42,21 +42,10 @@ private: // Methods
 
   // Create gridbox of cards
   ftxui::Element CreateBoard(const std::int32_t *const current_x,
-                             const std::int32_t *const current_y,
-                             const bool *const blink);
+                             const std::int32_t *const current_y);
 
   // Update m_Message and m_TextStyle based on the game state
   void MessageAndStyleFromGameState();
-
-  // Function to update blinker bool that will be launched asynchronously
-  void AsyncBlinkingUpdater();
-
-  // Override bliker bool and reset timer
-  void OverrideBlinking(const bool blink_or_not,
-                        const std::chrono::milliseconds &timerDuration) {
-    m_ShouldBlink = blink_or_not;
-    m_Timer = timerDuration;
-  }
 
 private:                         // Attributes
   std::uint32_t m_BoardSize = 4; // Size of the board
@@ -64,20 +53,6 @@ private:                         // Attributes
   bool m_ShouldRun = true; // Should the app be running
 
   bool m_IsSelectionStage = true; // Is the size selected (NOT)
-
-  bool m_ShouldBlink = false; // Blinker bool
-
-  const std::chrono::milliseconds m_TimerDuration =
-      std::chrono::milliseconds(1000); // Time between changing bliking states
-
-  std::chrono::milliseconds m_Timer =
-      m_TimerDuration; // Timer used to count down
-
-  // Clocks used to calculate time delta
-  std::chrono::time_point<std::chrono::steady_clock> m_TimeNow;
-
-  std::chrono::time_point<std::chrono::steady_clock> m_TimeLast =
-      std::chrono::steady_clock::now();
 
   // Current cursor position
   std::int32_t m_CurrentX = 0;
@@ -93,9 +68,6 @@ private:                         // Attributes
 
   // Handle events and update static UI
   ftxui::Component m_Renderer;
-
-  // Lock to avoid data races
-  std::mutex m_Lock;
 
   // Debug output stream
   std::ofstream m_DebugStream;

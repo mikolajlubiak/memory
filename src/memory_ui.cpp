@@ -24,9 +24,6 @@ MemoryUI::MemoryUI() {
   m_Screen.SetCursor(
       ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
 
-  auto blinking_handle =
-      std::async(std::launch::async, [this] { AsyncBlinkingUpdater(); });
-
   m_Renderer = CreateRenderer();
   m_Renderer |= HandleEvents();
 
@@ -41,12 +38,11 @@ void MemoryUI::MainGame() {
   auto options_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-              ftxui::Slider("Board size",
+              ftxui::Slider(ftxui::text("Board size") |
+                                ftxui::color(ftxui::Color::YellowLight),
                             ftxui::SliderWithCallbackOption<std::int32_t>{
                                 .callback =
                                     [&](std::int32_t board_size) {
-                                      std::lock_guard<std::mutex> lock(m_Lock);
-
                                       m_BoardSize = static_cast<std::uint32_t>(
                                                         board_size) *
                                                     2;
@@ -57,30 +53,31 @@ void MemoryUI::MainGame() {
                                 .min = 1,
                                 .max = 5,
                                 .increment = 1,
-                                .color_active = ftxui::Color::White,
-                                .color_inactive = ftxui::Color::White,
+                                .color_active = ftxui::Color::YellowLight,
+                                .color_inactive = ftxui::Color::YellowLight,
                             }),
 
-              ftxui::Slider("Player count",
+              ftxui::Slider(ftxui::text("Player count") |
+                                ftxui::color(ftxui::Color::YellowLight),
                             ftxui::SliderOption<std::int32_t>{
                                 .value = &player_count,
                                 .min = 1,
                                 .max = 10,
                                 .increment = 1,
-                                .color_active = ftxui::Color::White,
-                                .color_inactive = ftxui::Color::White,
+                                .color_active = ftxui::Color::YellowLight,
+                                .color_inactive = ftxui::Color::YellowLight,
                             }),
 
+              ftxui::Renderer([] { return ftxui::separator(); }),
               ftxui::Button("Select",
                             [&] {
-                              std::lock_guard<std::mutex> lock(m_Lock);
-
                               m_pGameLogic->SetPlayerCount(
                                   static_cast<std::uint32_t>(player_count));
 
                               m_IsSelectionStage = false;
                             }) |
-                  ftxui::center | ftxui::flex,
+                  ftxui::center | ftxui::flex |
+                  ftxui::color(ftxui::Color::Yellow),
           }),
 
           .title = "Options",
@@ -91,16 +88,14 @@ void MemoryUI::MainGame() {
 
   auto save_window =
       ftxui::Window({
-          .inner = ftxui::Button("Save",
-                                 [&] {
-                                   std::lock_guard<std::mutex> lock(m_Lock);
+          .inner =
+              ftxui::Button("Save",
+                            [&] {
+                              m_pGameLogic->SaveState(get_timestamp_filename());
 
-                                   m_pGameLogic->SaveState(
-                                       get_timestamp_filename());
-
-                                   MessageAndStyleFromGameState();
-                                 }) |
-                   ftxui::center | ftxui::flex,
+                              MessageAndStyleFromGameState();
+                            }) |
+              ftxui::center | ftxui::flex | ftxui::color(ftxui::Color::Cyan),
 
           .title = "Save game",
           .width = 10,
@@ -113,8 +108,6 @@ void MemoryUI::MainGame() {
   int selected_save = 0;
 
   auto load_select = [&] {
-    std::lock_guard<std::mutex> lock(m_Lock);
-
     m_BoardSize = m_pGameLogic->LoadState(saves_list[selected_save]);
 
     MessageAndStyleFromGameState();
@@ -130,9 +123,11 @@ void MemoryUI::MainGame() {
   auto load_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
-              menu_load,
-              ftxui::Button("Load", load_select) | ftxui::center | ftxui::flex,
-          }),
+                       menu_load,
+                       ftxui::Button("Load", load_select) | ftxui::center |
+                           ftxui::flex,
+                   }) |
+                   ftxui::color(ftxui::Color::Cyan),
 
           .title = "Load game",
           .width = static_cast<int>(10 * (saves_list.size() / 2) + 15),
@@ -163,16 +158,10 @@ ftxui::Component MemoryUI::CreateRenderer() {
 // Handle events (arrows and enter)
 ftxui::ComponentDecorator MemoryUI::HandleEvents() {
   return ftxui::CatchEvent([this](ftxui::Event event) {
-    std::lock_guard<std::mutex> lock(m_Lock);
-
     if (event == ftxui::Event::Character('q')) {
       m_Screen.ExitLoopClosure()();
       m_ShouldRun = false;
       return true;
-    }
-
-    if (event != ftxui::Event::Custom) {
-      OverrideBlinking(false, m_TimerDuration);
     }
 
     if (event == ftxui::Event::ArrowUp) {
@@ -197,8 +186,7 @@ ftxui::ComponentDecorator MemoryUI::HandleEvents() {
     }
 
     if (event == ftxui::Event::Return) {
-      bool should_blink = m_pGameLogic->SelectCard(m_CurrentX, m_CurrentY);
-      OverrideBlinking(should_blink, m_TimerDuration);
+      m_pGameLogic->SelectCard(m_CurrentX, m_CurrentY);
 
       MessageAndStyleFromGameState();
 
@@ -238,33 +226,37 @@ ftxui::Element MemoryUI::CreateUI() {
 
           ftxui::text(m_Message) | m_TextStyle,
       }) | ftxui::center,
-      CreateBoard(&m_CurrentX, &m_CurrentY, &m_ShouldBlink));
+      CreateBoard(&m_CurrentX, &m_CurrentY));
 }
 
 // Create gridbox of cards
 ftxui::Element MemoryUI::CreateBoard(const std::int32_t *const current_x,
-                                     const std::int32_t *const current_y,
-                                     const bool *const blink) {
+                                     const std::int32_t *const current_y) {
   std::vector<std::vector<ftxui::Element>> cells;
   cells.resize(m_BoardSize, std::vector<ftxui::Element>(m_BoardSize));
 
   for (int i = 0; i < m_BoardSize; ++i) {
     for (int j = 0; j < m_BoardSize; ++j) {
       ftxui::Element cell;
+      ftxui::Decorator color;
 
       // Determine the content of the cell
-      if (i == *current_x && j == *current_y && !(*blink)) {
-        cell = ftxui::text("_") | ftxui::color(ftxui::Color::Blue);
-
-      } else if (m_pGameLogic->GetRevealed()[i][j]) {
-        cell = ftxui::text(std::string(1, m_pGameLogic->GetBoard()[i][j])) |
-               ftxui::color(ftxui::Color::White);
-
+      if (m_pGameLogic->GetHasCardBeenRevealed()[i][j]) {
+        cell = ftxui::text(std::string(1, m_pGameLogic->GetBoard()[i][j]));
+        color = ftxui::color(ftxui::Color::White);
       } else {
-        cell = ftxui::text("*") | ftxui::color(ftxui::Color::YellowLight);
+        cell = ftxui::text("*");
+        color = ftxui::color(ftxui::Color::Grey50);
       }
 
-      cell = cell | ftxui::center | ftxui::border | ftxui::bold |
+      // If the cell is the one user selected light it in blue
+      if (i == *current_x && j == *current_y) {
+        color = ftxui::color(ftxui::Color::Blue);
+      } else if (m_pGameLogic->GetHasCardBeenMatched()[i][j]) {
+        color = ftxui::color(ftxui::Color::Green);
+      }
+
+      cell = cell | ftxui::bold | ftxui::center | ftxui::border | color |
              ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN,
                          std::ceil(60.0f / m_BoardSize)) |
              ftxui::size(ftxui::HEIGHT, ftxui::GREATER_THAN,
@@ -301,36 +293,6 @@ void MemoryUI::MessageAndStyleFromGameState() {
     m_Message = "Select first card";
     m_TextStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
     break;
-  }
-}
-
-// Function to update blinker bool that will be launched asynchronously
-void MemoryUI::AsyncBlinkingUpdater() {
-  m_TimeLast = std::chrono::steady_clock::now();
-
-  while (m_ShouldRun) {
-    {
-      std::lock_guard<std::mutex> lock(m_Lock);
-
-      m_TimeNow = std::chrono::steady_clock::now();
-      m_Timer -=
-          std::chrono::duration_cast<decltype(m_Timer)>(m_TimeNow - m_TimeLast);
-      m_TimeLast = m_TimeNow;
-    }
-
-    if (m_Timer.count() < 0.0) {
-      {
-        std::lock_guard<std::mutex> lock(m_Lock);
-
-        m_Timer = m_TimerDuration;
-        m_ShouldBlink = !m_ShouldBlink;
-      }
-
-      m_Screen.PostEvent(ftxui::Event::Custom);
-    }
-
-    std::this_thread::sleep_for(m_TimerDuration +
-                                std::chrono::milliseconds(10));
   }
 }
 

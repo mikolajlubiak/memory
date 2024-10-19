@@ -52,8 +52,7 @@ public:
   }
 
   // (On event enter) Select card at specified coordinates
-  // Returns the prefered blinking status
-  bool SelectCard(std::uint32_t current_x, std::uint32_t current_y);
+  void SelectCard(std::uint32_t current_x, std::uint32_t current_y);
 
   // Save current game state to file
   void SaveState(const std::string &filename);
@@ -64,8 +63,15 @@ public:
   // Return const board reference
   const std::vector<std::vector<char>> &GetBoard() { return m_Board; }
 
+  // Return const revealed cards reference
+  const std::vector<std::vector<bool>> &GetHasCardBeenRevealed() {
+    return m_HasCardBeenRevealed;
+  }
+
   // Return const revealed reference
-  const std::vector<std::vector<bool>> &GetRevealed() { return m_Revealed; }
+  const std::vector<std::vector<bool>> &GetHasCardBeenMatched() {
+    return m_HasCardBeenMatched;
+  }
 
   // Return count of found pairs for current player
   std::uint32_t GetPairsFoundCount() {
@@ -108,7 +114,12 @@ private:                                    // Attributes
   std::vector<std::vector<char>> m_Board{}; // 2D vector storing cards (chars)
 
   std::vector<std::vector<bool>>
-      m_Revealed{}; // 2D vector stroing which cards should be revealed
+      m_HasCardBeenRevealed{}; // 2D vector stroing which cards should be
+                               // revealed
+
+  std::vector<std::vector<bool>>
+      m_HasCardBeenMatched{}; // 2D vector stroing whether a card has been
+                              // matched
 
   std::uint32_t m_BoardSize = 4;                         // Size of the board
   std::uint32_t m_TotalCards = std::pow(m_BoardSize, 2); // Total number cards

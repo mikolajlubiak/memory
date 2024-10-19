@@ -228,7 +228,7 @@ private:
 
 class SliderWithLabel : public ComponentBase {
 public:
-  SliderWithLabel(ConstStringRef label, Component inner)
+  SliderWithLabel(const Element label, Component inner)
       : label_(std::move(label)) {
     Add(std::move(inner));
     SetActiveChild(ChildAt(0));
@@ -262,7 +262,7 @@ private:
     auto gauge_color = (Focused() || mouse_hover_) ? color(Color::White)
                                                    : color(Color::GrayDark);
     return hbox({
-               text(label_()) | dim | vcenter,
+               label_ | dim | vcenter,
                hbox({
                    text("["),
                    ComponentBase::Render() | underlined,
@@ -272,7 +272,7 @@ private:
            gauge_color | xflex | reflect(box_) | focus_management;
   }
 
-  ConstStringRef label_;
+  const Element label_;
   Box box_;
   bool mouse_hover_ = false;
 };
@@ -459,7 +459,7 @@ private:
 
 // Base slider with label
 template <typename T>
-Component Slider(ConstStringRef label, SliderOption<T> options) {
+Component Slider(const Element label, SliderOption<T> options) {
   auto slider = Make<SliderBase<T>>(options);
   return Make<SliderWithLabel>(std::move(label), slider);
 }
@@ -471,7 +471,7 @@ template <typename T> Component Slider(SliderWithCallbackOption<T> options) {
 
 // Slider with label and callback
 template <typename T>
-Component Slider(ConstStringRef label, SliderWithCallbackOption<T> options) {
+Component Slider(const Element label, SliderWithCallbackOption<T> options) {
   auto slider = Make<SliderWithCallback<T>>(options);
   return Make<SliderWithLabel>(std::move(label), slider);
 }
