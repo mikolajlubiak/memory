@@ -208,6 +208,12 @@ ftxui::Element MemoryUI::CreateUI() {
               ftxui::bold,
           ftxui::separator(),
 
+          ftxui::text("Player "),
+          ftxui::text(
+              std::to_string(m_pGameLogic->GetCurrentPlayerIndex() + 1)),
+          ftxui::text(" turn"),
+          ftxui::separator(),
+
           ftxui::text("Pairs Found: "),
           ftxui::text(std::to_string(m_pGameLogic->GetPairsFoundCount())) |
               ftxui::blink,
@@ -265,7 +271,9 @@ void MemoryUI::MessageAndStyleFromGameState() {
     m_TextStyle = ftxui::underlined | ftxui::color(ftxui::Color::LightYellow3);
     break;
   case GameStatus::gameFinished:
-    m_Message = "Congratulations! You've found all pairs!";
+    m_Message = std::format("Player {} won. Congratulations!",
+                            m_pGameLogic->GetWinner() + 1);
+
     m_TextStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
     break;
   case GameStatus::cardsDidntMatch:

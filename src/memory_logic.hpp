@@ -1,6 +1,7 @@
 #pragma once
 
 // std
+#include <algorithm>
 #include <cmath>
 #include <cstdint>
 #include <fstream>
@@ -44,8 +45,20 @@ public:
   // Return const revealed reference
   const std::vector<std::vector<bool>> &GetRevealed() { return m_Revealed; }
 
-  // Return count of found pairs
-  std::uint32_t GetPairsFoundCount() { return m_PairsFoundCount; }
+  // Return count of found pairs for current player
+  std::uint32_t GetPairsFoundCount() {
+    return m_PlayersMatchedCardsCount[m_PlayerIndex];
+  }
+
+  // Player with most matched cards
+  std::uint32_t GetWinner() {
+    return std::distance(m_PlayersMatchedCardsCount.begin(),
+                         std::max_element(m_PlayersMatchedCardsCount.begin(),
+                                          m_PlayersMatchedCardsCount.end()));
+    }
+
+  // Return current players index
+  std::uint32_t GetCurrentPlayerIndex() { return m_PlayerIndex; }
 
   // Return game status
   GameStatus GetGameStatus() { return m_GameStatus; }
@@ -73,8 +86,6 @@ private:                                    // Attributes
   GameStatus m_GameStatus =
       GameStatus::selectingFirstCard; // Current game status
 
-  std::uint32_t m_PairsFoundCount = 0; // Number of found pairs
-
   std::uint32_t m_PreviousX =
       0; // Previous X (in game state selectingSecondCard)
   std::uint32_t m_PreviousY =
@@ -85,6 +96,12 @@ private:                                    // Attributes
   // comes back to stage one the card will be hidden
   std::uint32_t m_TempX = 0;
   std::uint32_t m_TempY = 0;
+
+  std::uint32_t m_PlayersCount = 2; // Number of players
+  std::vector<std::uint32_t>
+      m_PlayersMatchedCardsCount{}; // Vector storing number of matched cards
+                                    // for each player
+  std::uint32_t m_PlayerIndex = 0;  // Current players turn
 };
 
 } // namespace memory_game

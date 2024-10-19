@@ -4,6 +4,7 @@
 // std
 #include <algorithm>
 #include <format>
+#include <numeric>
 #include <random>
 
 namespace memory_game {
@@ -56,10 +57,13 @@ bool MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
 
     // Check if the cards match
     if (CheckMatch(current_x, current_y, m_PreviousX, m_PreviousY)) {
-      m_PairsFoundCount++;
+      m_PlayersMatchedCardsCount[m_PlayerIndex]++;
 
       // Check if all cards are matched
-      if (m_PairsFoundCount * 2 < m_TotalCards) {
+      if (std::reduce(m_PlayersMatchedCardsCount.begin(),
+                      m_PlayersMatchedCardsCount.end()) *
+              2 <
+          m_TotalCards) {
         m_GameStatus = GameStatus::selectingFirstCard;
       } else {
         m_GameStatus = GameStatus::gameFinished;
@@ -71,6 +75,9 @@ bool MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
       // user comes back to stage one the card will be hidden
       m_TempX = current_x;
       m_TempY = current_y;
+
+      // Next players turn
+      m_PlayerIndex = (m_PlayerIndex + 1) % m_PlayersCount;
 
       m_GameStatus = GameStatus::cardsDidntMatch;
     }
@@ -112,7 +119,8 @@ void MemoryLogic::InitializeBoard() {
 
   // Initialize and fill the vectors
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
-  m_Revealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
+  m_Revealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize, false));
+  m_PlayersMatchedCardsCount.resize(m_PlayersCount, 0);
 
   for (int i = 0; i < m_BoardSize; ++i) {
     for (int j = 0; j < m_BoardSize; ++j) {
@@ -130,9 +138,10 @@ void MemoryLogic::ResetState() {
   // Clear vectors
   m_Board.clear();
   m_Revealed.clear();
+  m_PlayersMatchedCardsCount.clear();
 
   // Reset game state
-  m_PairsFoundCount = 0;
+  m_PlayerIndex = 0;
   m_GameStatus = GameStatus::selectingFirstCard;
 }
 
@@ -169,12 +178,19 @@ void MemoryLogic::SaveState(const std::string &filename) {
   file.write(reinterpret_cast<const char *>(&m_BoardSize), sizeof(m_BoardSize));
   file.write(reinterpret_cast<const char *>(&m_GameStatus),
              sizeof(m_GameStatus));
-  file.write(reinterpret_cast<const char *>(&m_PairsFoundCount),
-             sizeof(m_PairsFoundCount));
+  file.write(reinterpret_cast<const char *>(&m_PlayersCount),
+             sizeof(m_PlayersCount));
+  file.write(reinterpret_cast<const char *>(&m_PlayerIndex),
+             sizeof(m_PlayerIndex));
 
   // Save cursor state
   file.write(reinterpret_cast<const char *>(&m_PreviousX), sizeof(m_PreviousX));
   file.write(reinterpret_cast<const char *>(&m_PreviousY), sizeof(m_PreviousY));
+
+  // Save players matched cards count
+  file.write(reinterpret_cast<const char *>(&m_PlayersMatchedCardsCount[0]),
+             m_PlayersMatchedCardsCount.size() *
+                 sizeof(m_PlayersMatchedCardsCount[0]));
 
   for (int i = 0; i < m_BoardSize; i++) {
     // Save board
@@ -211,8 +227,8 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
   // Load board state
   file.read(reinterpret_cast<char *>(&m_BoardSize), sizeof(m_BoardSize));
   file.read(reinterpret_cast<char *>(&m_GameStatus), sizeof(m_GameStatus));
-  file.read(reinterpret_cast<char *>(&m_PairsFoundCount),
-            sizeof(m_PairsFoundCount));
+  file.read(reinterpret_cast<char *>(&m_PlayersCount), sizeof(m_PlayersCount));
+  file.read(reinterpret_cast<char *>(&m_PlayerIndex), sizeof(m_PlayerIndex));
 
   // Load cursor state
   file.read(reinterpret_cast<char *>(&m_PreviousX), sizeof(m_PreviousX));
@@ -225,13 +241,21 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
   m_Revealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
 
+  // Resize vector to fit number of players
+  m_PlayersMatchedCardsCount.resize(m_PlayersCount);
+
+  // Load players matched cards count
+  file.read(reinterpret_cast<char *>(&m_PlayersMatchedCardsCount[0]),
+            m_PlayersMatchedCardsCount.size() *
+                sizeof(m_PlayersMatchedCardsCount[0]));
+
   for (int i = 0; i < m_BoardSize; i++) {
     // Load board
     file.read(reinterpret_cast<char *>(&m_Board[i][0]),
-              m_BoardSize * sizeof(m_Board[i][0]));
+              m_Board.size() * sizeof(m_Board[i][0]));
 
     // Load which cards should be revealed
-    for (int j = 0; j < m_BoardSize; j++) {
+    for (int j = 0; j < m_Revealed.size(); j++) {
       char temp;
       file.read(reinterpret_cast<char *>(&temp), sizeof(temp));
       m_Revealed[i][j] = static_cast<bool>(temp);
