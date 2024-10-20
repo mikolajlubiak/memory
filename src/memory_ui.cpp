@@ -33,6 +33,52 @@ MemoryUI::MemoryUI() {
 
 // Create all needed components and loop
 void MemoryUI::MainGame() {
+  float mouse_y = 0.0f;
+  float mouse_x = 0.0f;
+
+  auto plot_3d = ftxui::Renderer([&] {
+    auto c = ftxui::Canvas(300, 300);
+    std::uint32_t size = 50;
+    std::uint32_t offset = 20;
+
+    float my = (mouse_y - 90 - offset) / -5.f;
+    float mx = (mouse_x - 3 * my + offset) / 5.f;
+    std::vector<std::vector<float>> ys(size, std::vector<float>(size));
+    for (int y = 0; y < size; y++) {
+      for (int x = 0; x < size; x++) {
+        float dx = x - mx;
+        float dy = y - my;
+        ys[y][x] = -1.5 + 3.0 * std::exp(-0.2f * (dx * dx + dy * dy));
+      }
+    }
+    for (int y = 0; y < size; y++) {
+      for (int x = 0; x < size; x++) {
+        if (x != 0) {
+          c.DrawPointLine(5 * (x - 1) + 3 * (y - 0) - offset,
+                          90 - 5 * (y - 0) - 5 * ys[y][x - 1] + offset,
+                          5 * (x - 0) + 3 * (y - 0) - offset,
+                          90 - 5 * (y - 0) - 5 * ys[y][x] + offset);
+        }
+        if (y != 0) {
+          c.DrawPointLine(5 * (x - 0) + 3 * (y - 1) - offset,
+                          90 - 5 * (y - 1) - 5 * ys[y - 1][x] + offset,
+                          5 * (x - 0) + 3 * (y - 0) - offset,
+                          90 - 5 * (y - 0) - 5 * ys[y][x] + offset);
+        }
+      }
+    }
+
+    return ftxui::canvas(std::move(c));
+  });
+
+  plot_3d |= ftxui::CatchEvent([&](ftxui::Event e) {
+    if (e.is_mouse()) {
+      mouse_x = (e.mouse().x - 1) * 2;
+      mouse_y = (e.mouse().y - 1) * 4;
+    }
+    return false;
+  });
+
   std::int32_t player_count = m_pGameLogic->GetPlayerCount();
 
   bool is_selection_stage = true; // Is the size selected (NOT)
@@ -150,6 +196,7 @@ void MemoryUI::MainGame() {
       ftxui::Maybe(load_window, [&] { return saves_list.size() > 0; }),
       ftxui::Maybe(save_window, [&] { return !is_selection_stage; }),
       m_Renderer,
+      plot_3d,
   });
 
   m_Screen.Loop(main_game_component);
