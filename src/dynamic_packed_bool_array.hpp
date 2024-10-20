@@ -46,9 +46,13 @@ public:
   // Resize the data. Using calloc instead of realloc since I don't want to copy
   // the data.
   void Resize(std::size_t size_in_bits) {
-    m_SizeInBits = size_in_bits;
+    // Allocate memory only if the requested size is larger than current size
+    if (size_in_bits > m_SizeInBits) {
+      m_Data = reinterpret_cast<std::uint8_t *>(
+          std::calloc(1, (size_in_bits + 7) / 8));
+    }
 
-    m_Data = reinterpret_cast<std::uint8_t *>(std::calloc(1, GetSizeInBytes()));
+    m_SizeInBits = size_in_bits;
   }
 
   // Clear the array. Don't free the memory since its costly and it will be done
