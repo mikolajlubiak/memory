@@ -54,7 +54,7 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
     }
 
     // Reveal card
-    m_HasCardBeenRevealed[current_x].Set(current_y, true);
+    m_HasCardBeenRevealed[current_x][current_y] = true;
 
     // Store the card coordinates for next stage
     m_PreviousX = current_x;
@@ -72,12 +72,12 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
     }
 
     // Reveal card
-    m_HasCardBeenRevealed[current_x].Set(current_y, true);
+    m_HasCardBeenRevealed[current_x][current_y] = true;
 
     // Check if the cards match
     if (CheckMatch(current_x, current_y, m_PreviousX, m_PreviousY)) {
-      m_HasCardBeenMatched[current_x].Set(current_y, true);
-      m_HasCardBeenMatched[m_PreviousX].Set(m_PreviousY, true);
+      m_HasCardBeenMatched[current_x][current_y] = true;
+      m_HasCardBeenMatched[m_PreviousX][m_PreviousY] = true;
 
       m_PlayersMatchedCardsCount[m_PlayerIndex]++;
 
@@ -108,8 +108,8 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
 
   } else if (m_GameStatus == GameStatus::cardsDidntMatch) {
     // Hide cards after they didn't match
-    m_HasCardBeenRevealed[m_TempX].Set(m_TempY, false);
-    m_HasCardBeenRevealed[m_PreviousX].Set(m_PreviousY, false);
+    m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
+    m_HasCardBeenRevealed[m_PreviousX][m_PreviousY] = false;
 
     // Go back to first card selection stage
     m_GameStatus = GameStatus::selectingFirstCard;
@@ -179,8 +179,8 @@ void MemoryLogic::SaveState(const std::string &filename) {
   // `m_Revealed[m_TempX][m_TempY]` wouldn't hide since
   // m_TempX and m_TempY are not stored.
   if (m_GameStatus == GameStatus::cardsDidntMatch) {
-    m_HasCardBeenRevealed[m_TempX].Set(m_TempY, false);
-    m_HasCardBeenRevealed[m_PreviousX].Set(m_PreviousY, false);
+    m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
+    m_HasCardBeenRevealed[m_PreviousX][m_PreviousX] = false;
 
     m_GameStatus = GameStatus::selectingFirstCard;
   }

@@ -1,6 +1,31 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <stdexcept>
+
+// Overload [] operator to allow setting bit at position index
+class Proxy {
+public:
+  Proxy(std::uint8_t *byte, std::size_t bit_position)
+      : m_Byte(byte), m_BitPosition(bit_position) {}
+
+  // Conversion operator to bool
+  operator bool() const { return (*m_Byte & (1 << m_BitPosition)) != 0; }
+
+  // Assignment operator to set the bit
+  Proxy &operator=(bool value) {
+    if (value) {
+      *m_Byte |= (1 << m_BitPosition);
+    } else {
+      *m_Byte &= ~(1 << m_BitPosition);
+    }
+    return *this;
+  }
+
+private:
+  std::uint8_t *m_Byte;
+  std::size_t m_BitPosition;
+};
 
 class DynamicPackedBoolArray {
 public:
@@ -24,7 +49,7 @@ public:
     m_Data = reinterpret_cast<std::uint8_t *>(std::calloc(1, GetSizeInBytes()));
   }
 
-  // Clear the array. Don't free the memory since it costly and it will be done
+  // Clear the array. Don't free the memory since its costly and it will be done
   // in dtor anyway.
   void Clear() { m_SizeInBits = 0; }
 
@@ -64,7 +89,7 @@ public:
 
       return (byte & bitmask) != 0;
     }
-    return 0;
+    throw std::out_of_range("Index out of range");
   }
 
   // Get pointer to the byte that stores bit at position index
@@ -73,7 +98,7 @@ public:
       std::size_t byte_index = index / 8;
       return m_Data + byte_index;
     }
-    return nullptr;
+    throw std::out_of_range("Index out of range");
   }
 
   // Get pointer to the m_Data
@@ -84,6 +109,11 @@ public:
 
   // Overload [] operator to access bit at position index
   bool operator[](std::size_t index) const { return GetBit(index); }
+
+  // Overload [] operator to return a Proxy for setting bits
+  Proxy operator[](std::size_t index) {
+    return Proxy(GetBytePtr(index), index % 8);
+  }
 
 private:
   std::uint8_t
