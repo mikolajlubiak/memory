@@ -37,9 +37,9 @@ void MemoryUI::MainGame() {
   float mouse_x = 0.0f;
 
   auto plot_3d = ftxui::Renderer([&] {
-    auto c = ftxui::Canvas(300, 300);
-    std::uint32_t size = 50;
-    std::uint32_t offset = 20;
+    auto c = ftxui::Canvas(600, 600);
+    std::uint32_t size = 100;
+    std::uint32_t offset = 200;
 
     float my = (mouse_y - 90 - offset) / -5.f;
     float mx = (mouse_x - 3 * my + offset) / 5.f;
@@ -83,6 +83,8 @@ void MemoryUI::MainGame() {
 
   bool is_selection_stage = true; // Is the size selected (NOT)
 
+  bool add_background = false;
+
   // Select options
   auto options_window =
       ftxui::Window({
@@ -117,6 +119,8 @@ void MemoryUI::MainGame() {
                                 .color_inactive = ftxui::Color::YellowLight,
                             }),
 
+              ftxui::Checkbox("Background", &add_background),
+
               ftxui::Renderer([] { return ftxui::separator(); }),
               ftxui::Button("Select",
                             [&] {
@@ -132,7 +136,7 @@ void MemoryUI::MainGame() {
           .title = "Options",
           .left = 0,
           .width = 30,
-          .height = 8,
+          .height = 9,
       }) |
       ftxui::vcenter;
 
@@ -184,7 +188,7 @@ void MemoryUI::MainGame() {
 
           .title = "Load game",
           .width = 25,
-          .height = static_cast<int>(saves_list.size()) + 7,
+          .height = static_cast<int>(saves_list.size()) + 6,
       }) |
       ftxui::align_right | ftxui::vcenter | ftxui::flex;
 
@@ -196,7 +200,7 @@ void MemoryUI::MainGame() {
       ftxui::Maybe(load_window, [&] { return saves_list.size() > 0; }),
       ftxui::Maybe(save_window, [&] { return !is_selection_stage; }),
       m_Renderer,
-      plot_3d,
+      ftxui::Maybe(plot_3d, &add_background),
   });
 
   m_Screen.Loop(main_game_component);
