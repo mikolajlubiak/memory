@@ -35,7 +35,7 @@ MemoryUI::MemoryUI() {
 void MemoryUI::MainGame() {
   std::int32_t player_count = m_pGameLogic->GetPlayerCount();
 
-  bool m_IsSelectionStage = true; // Is the size selected (NOT)
+  bool is_selection_stage = true; // Is the size selected (NOT)
 
   // Select options
   auto options_window =
@@ -77,7 +77,7 @@ void MemoryUI::MainGame() {
                               m_pGameLogic->SetPlayerCount(
                                   static_cast<std::uint32_t>(player_count));
 
-                              m_IsSelectionStage = false;
+                              is_selection_stage = false;
                             }) |
                   ftxui::center | ftxui::flex |
                   ftxui::color(ftxui::Color::Yellow),
@@ -112,11 +112,13 @@ void MemoryUI::MainGame() {
   int selected_save = 0;
 
   auto load_select = [&] {
-    m_BoardSize = m_pGameLogic->LoadState(saves_list[selected_save]);
+    m_pGameLogic->LoadState(saves_list[selected_save]);
+
+    m_BoardSize = m_pGameLogic->GetBoardSize();
 
     MessageAndStyleFromGameState();
 
-    m_IsSelectionStage = false;
+    is_selection_stage = false;
   };
 
   ftxui::MenuOption menu_load_option;
@@ -142,11 +144,11 @@ void MemoryUI::MainGame() {
 
   auto main_game_component = ftxui::Container::Stacked({
       // selection stage
-      ftxui::Maybe(options_window, &m_IsSelectionStage),
+      ftxui::Maybe(options_window, &is_selection_stage),
 
       // game
       ftxui::Maybe(load_window, [&] { return saves_list.size() > 0; }),
-      ftxui::Maybe(save_window, [&] { return !m_IsSelectionStage; }),
+      ftxui::Maybe(save_window, [&] { return !is_selection_stage; }),
       m_Renderer,
   });
 

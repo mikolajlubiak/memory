@@ -54,7 +54,7 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
     }
 
     // Reveal card
-    m_HasCardBeenRevealed[current_x][current_y] = true;
+    m_HasCardBeenRevealed[current_x].Set(current_y, true);
 
     // Store the card coordinates for next stage
     m_PreviousX = current_x;
@@ -72,12 +72,12 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
     }
 
     // Reveal card
-    m_HasCardBeenRevealed[current_x][current_y] = true;
+    m_HasCardBeenRevealed[current_x].Set(current_y, true);
 
     // Check if the cards match
     if (CheckMatch(current_x, current_y, m_PreviousX, m_PreviousY)) {
-      m_HasCardBeenMatched[current_x][current_y] = true;
-      m_HasCardBeenMatched[m_PreviousX][m_PreviousY] = true;
+      m_HasCardBeenMatched[current_x].Set(current_y, true);
+      m_HasCardBeenMatched[m_PreviousX].Set(m_PreviousY, true);
 
       m_PlayersMatchedCardsCount[m_PlayerIndex]++;
 
@@ -108,8 +108,8 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
 
   } else if (m_GameStatus == GameStatus::cardsDidntMatch) {
     // Hide cards after they didn't match
-    m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
-    m_HasCardBeenRevealed[m_PreviousX][m_PreviousY] = false;
+    m_HasCardBeenRevealed[m_TempX].Set(m_TempY, false);
+    m_HasCardBeenRevealed[m_PreviousX].Set(m_PreviousY, false);
 
     // Go back to first card selection stage
     m_GameStatus = GameStatus::selectingFirstCard;
@@ -139,13 +139,15 @@ void MemoryLogic::InitializeBoard() {
 
   // Initialize and fill the vectors
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
-  m_HasCardBeenRevealed.resize(m_BoardSize,
-                               std::vector<bool>(m_BoardSize, false));
-  m_HasCardBeenMatched.resize(m_BoardSize,
-                              std::vector<bool>(m_BoardSize, false));
+  m_HasCardBeenRevealed.resize(m_BoardSize);
+  m_HasCardBeenMatched.resize(m_BoardSize);
   m_PlayersMatchedCardsCount.resize(m_PlayersCount, 0);
 
   for (int i = 0; i < m_BoardSize; ++i) {
+    // Resize the DynamicPackedBoolArray and initialize it to zero
+    m_HasCardBeenRevealed[i].Resize(m_BoardSize);
+    m_HasCardBeenMatched[i].Resize(m_BoardSize);
+
     for (int j = 0; j < m_BoardSize; ++j) {
       m_Board[i][j] = cards[i * m_BoardSize + j];
     }
@@ -177,8 +179,8 @@ void MemoryLogic::SaveState(const std::string &filename) {
   // `m_Revealed[m_TempX][m_TempY]` wouldn't hide since
   // m_TempX and m_TempY are not stored.
   if (m_GameStatus == GameStatus::cardsDidntMatch) {
-    m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
-    m_HasCardBeenRevealed[m_PreviousX][m_PreviousY] = false;
+    m_HasCardBeenRevealed[m_TempX].Set(m_TempY, false);
+    m_HasCardBeenRevealed[m_PreviousX].Set(m_PreviousY, false);
 
     m_GameStatus = GameStatus::selectingFirstCard;
   }
@@ -222,23 +224,20 @@ void MemoryLogic::SaveState(const std::string &filename) {
                m_Board[i].size() * sizeof(m_Board[i][0]));
 
     // Save which cards are revealed
-    for (int j = 0; j < m_HasCardBeenRevealed.size(); j++) {
-      char temp = static_cast<char>(m_HasCardBeenRevealed[i][j]);
-      file.write(reinterpret_cast<const char *>(&temp), sizeof(temp));
-    }
+    file.write(
+        reinterpret_cast<const char *>(m_HasCardBeenRevealed[i].GetPtr()),
+        m_HasCardBeenRevealed[i].GetSizeInBytes());
 
     // Save which cards are matched
-    for (int j = 0; j < m_HasCardBeenMatched.size(); j++) {
-      char temp = static_cast<char>(m_HasCardBeenMatched[i][j]);
-      file.write(reinterpret_cast<const char *>(&temp), sizeof(temp));
-    }
+    file.write(reinterpret_cast<const char *>(m_HasCardBeenMatched[i].GetPtr()),
+               m_HasCardBeenMatched[i].GetSizeInBytes());
   }
 
   // Close file
   file.close();
 }
 
-std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
+void MemoryLogic::LoadState(const std::string &filename) {
   // Open file for reading in binary format
   std::ifstream file(filename, std::ios::binary);
 
@@ -251,7 +250,7 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
                  << std::endl;
 
     debug_stream.close();
-    return 0;
+    return;
   }
 
   // Load board state
@@ -266,8 +265,8 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
 
   // Resize the vectors to fit the board size
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
-  m_HasCardBeenRevealed.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
-  m_HasCardBeenMatched.resize(m_BoardSize, std::vector<bool>(m_BoardSize));
+  m_HasCardBeenRevealed.resize(m_BoardSize);
+  m_HasCardBeenMatched.resize(m_BoardSize);
 
   // Resize vector to fit number of players
   m_PlayersMatchedCardsCount.resize(m_PlayersCount);
@@ -278,33 +277,29 @@ std::uint32_t MemoryLogic::LoadState(const std::string &filename) {
                 sizeof(m_PlayersMatchedCardsCount[0]));
 
   for (int i = 0; i < m_BoardSize; i++) {
+    // Resize the DynamicPackedBoolArray
+    m_HasCardBeenRevealed[i].Resize(m_BoardSize);
+    m_HasCardBeenMatched[i].Resize(m_BoardSize);
+
     // Load board
     file.read(reinterpret_cast<char *>(&m_Board[i][0]),
               m_Board.size() * sizeof(m_Board[i][0]));
 
     // Load which cards should be revealed
-    for (int j = 0; j < m_HasCardBeenRevealed.size(); j++) {
-      char temp;
-      file.read(reinterpret_cast<char *>(&temp), sizeof(temp));
-      m_HasCardBeenRevealed[i][j] = static_cast<bool>(temp);
-    }
+    file.read(reinterpret_cast<char *>(m_HasCardBeenRevealed[i].GetPtr()),
+              m_HasCardBeenRevealed[i].GetSizeInBytes());
 
     // Load which cards are matched
-    for (int j = 0; j < m_HasCardBeenMatched.size(); j++) {
-      char temp;
-      file.read(reinterpret_cast<char *>(&temp), sizeof(temp));
-      m_HasCardBeenMatched[i][j] = static_cast<bool>(temp);
-    }
+    file.read(reinterpret_cast<char *>(m_HasCardBeenMatched[i].GetPtr()),
+              m_HasCardBeenMatched[i].GetSizeInBytes());
   }
 
   // Close file
   file.close();
-
-  return m_BoardSize;
 }
 
 // Player with most matched cards
-std::vector<std::uint32_t> MemoryLogic::GetWinners() {
+std::vector<std::uint32_t> MemoryLogic::GetWinners() const {
   if (m_PlayersMatchedCardsCount.empty()) {
     return {};
   }

@@ -1,5 +1,8 @@
 #pragma once
 
+// local
+#include <dynamic_packed_bool_array.hpp>
+
 // std
 #include <algorithm>
 #include <cmath>
@@ -28,7 +31,16 @@ public:
 
   MemoryLogic(std::uint32_t board_size, std::uint32_t player_count);
 
+  // Initialize random game board
+  void InitializeBoard();
+
+  // Set board size
   void SetBoardSize(std::uint32_t board_size);
+
+  // Set player count
+  void SetPlayerCount(std::uint32_t player_count) {
+    m_PlayersCount = player_count;
+  }
 
   // (On event enter) Select card at specified coordinates
   void SelectCard(std::uint32_t current_x, std::uint32_t current_y);
@@ -37,48 +49,43 @@ public:
   void SaveState(const std::string &filename);
 
   // Load game state from file
-  std::uint32_t LoadState(const std::string &filename);
+  void LoadState(const std::string &filename);
 
   // Return const board reference
-  const std::vector<std::vector<char>> &GetBoard() { return m_Board; }
+  const std::vector<std::vector<char>> &GetBoard() const { return m_Board; }
 
   // Return const revealed cards reference
-  const std::vector<std::vector<bool>> &GetHasCardBeenRevealed() {
+  const std::vector<DynamicPackedBoolArray> &GetHasCardBeenRevealed() const {
     return m_HasCardBeenRevealed;
   }
 
   // Return const revealed reference
-  const std::vector<std::vector<bool>> &GetHasCardBeenMatched() {
+  const std::vector<DynamicPackedBoolArray> &GetHasCardBeenMatched() const {
     return m_HasCardBeenMatched;
   }
 
   // Return count of found pairs for current player
-  std::uint32_t GetMatchedCardsCount() {
+  std::uint32_t GetMatchedCardsCount() const {
     return m_PlayersMatchedCardsCount[m_PlayerIndex];
   }
 
   // Player with most matched cards
-  std::vector<std::uint32_t> GetWinners();
+  std::vector<std::uint32_t> GetWinners() const;
 
   // Return current players index
-  std::uint32_t GetCurrentPlayerIndex() { return m_PlayerIndex; }
+  std::uint32_t GetCurrentPlayerIndex() const { return m_PlayerIndex; }
 
   // Return number of players
-  std::uint32_t GetPlayerCount() { return m_PlayersCount; }
+  std::uint32_t GetPlayerCount() const { return m_PlayersCount; }
 
   // Return total number of cards
-  std::uint32_t GetTotalCardsCount() { return std::pow(m_BoardSize, 2); }
-
-  // Set player count
-  void SetPlayerCount(std::uint32_t player_count) {
-    m_PlayersCount = player_count;
-  }
+  std::uint32_t GetTotalCardsCount() const { return std::pow(m_BoardSize, 2); }
 
   // Return game status
-  GameStatus GetGameStatus() { return m_GameStatus; }
+  GameStatus GetGameStatus() const { return m_GameStatus; }
 
-  // Initialize random game board
-  void InitializeBoard();
+  // Return game status
+  std::uint32_t GetBoardSize() const { return m_BoardSize; }
 
 private: // Methods
   // Check if the selected cards match
@@ -91,13 +98,13 @@ private: // Methods
 private:                                    // Attributes
   std::vector<std::vector<char>> m_Board{}; // 2D vector storing cards (chars)
 
-  std::vector<std::vector<bool>>
-      m_HasCardBeenRevealed{}; // 2D vector stroing which cards should be
-                               // revealed
+  std::vector<DynamicPackedBoolArray>
+      m_HasCardBeenRevealed{}; // 2D (kinda) vector storing which cards should
+                               // be revealed
 
-  std::vector<std::vector<bool>>
-      m_HasCardBeenMatched{}; // 2D vector stroing whether a card has been
-                              // matched
+  std::vector<DynamicPackedBoolArray>
+      m_HasCardBeenMatched{}; // 2D (kinda) vector storing whether a card has
+                              // been matched
 
   std::uint32_t m_BoardSize = 4; // Size of the board
 
