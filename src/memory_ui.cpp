@@ -119,7 +119,8 @@ void MemoryUI::MainGame() {
                                 .color_inactive = ftxui::Color::YellowLight,
                             }),
 
-              ftxui::Checkbox("Background", &add_background),
+              ftxui::Checkbox("Background", &add_background) | ftxui::center |
+                  ftxui::flex | ftxui::color(ftxui::Color::Yellow),
 
               ftxui::Renderer([] { return ftxui::separator(); }),
               ftxui::Button("Select",
