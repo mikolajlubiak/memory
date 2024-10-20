@@ -1,9 +1,11 @@
+#pragma once
+
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
 
-// Overload [] operator to allow setting bit at position index
+// Proxy class to allow for setting bit value through [] operator
 class Proxy {
 public:
   Proxy(std::uint8_t *byte, std::size_t bit_position)
@@ -13,7 +15,7 @@ public:
   operator bool() const { return (*m_Byte & (1 << m_BitPosition)) != 0; }
 
   // Assignment operator to set the bit
-  Proxy &operator=(bool value) {
+  Proxy &operator=(const bool value) {
     if (value) {
       *m_Byte |= (1 << m_BitPosition);
     } else {
@@ -82,23 +84,23 @@ public:
 
   // Get bit value at position index
   bool GetBit(const std::size_t index) const {
-    if (index < m_SizeInBits) {
-      std::uint8_t bitmask = 1 << (index % 8);
-
-      std::uint8_t byte = *GetBytePtr(index);
-
-      return (byte & bitmask) != 0;
+    if (index > m_SizeInBits) {
+      throw std::out_of_range("Index out of range");
     }
-    throw std::out_of_range("Index out of range");
+
+    std::uint8_t bitmask = 1 << (index % 8);
+    std::uint8_t byte = *GetBytePtr(index);
+    return (byte & bitmask) != 0;
   }
 
   // Get pointer to the byte that stores bit at position index
   std::uint8_t *GetBytePtr(const std::size_t index) const {
-    if (index < m_SizeInBits) {
-      std::size_t byte_index = index / 8;
-      return m_Data + byte_index;
+    if (index > m_SizeInBits) {
+      throw std::out_of_range("Index out of range");
     }
-    throw std::out_of_range("Index out of range");
+
+    std::size_t byte_index = index / 8;
+    return m_Data + byte_index;
   }
 
   // Get pointer to the m_Data
