@@ -1,9 +1,10 @@
 ![Game showcase](docs/showcase.png "memory")
 
-Simple, cross platform, terminal memory game
+## Simple, cross platform, terminal memory game
 
 # Build
-* Tested on Linux and Windows, but MacOS, and really any other OS with a CMake port and C++20 compatible compiler, should work as well.
+Tested on Linux and Windows, but MacOS, and really any other OS with a CMake port and C++20 compatible compiler, should work as well.
+
 * Linux (and other Unix systems like MacOS):
     * Install CMake and Git (different commands based on your distribution)
     * `git clone https://github.com/mikolajlubiak/memory`
