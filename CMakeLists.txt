@@ -1,8 +1,19 @@
-cmake_minimum_required(VERSION 3.5)
-project(memory_game)
+cmake_minimum_required(VERSION 3.5.0)
+project(memory_game VERSION 1.0.0 LANGUAGES C CXX)
 
+# Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+
+# Sources
+file(GLOB_RECURSE SOURCES
+	src/*.cpp
+)
+
+# Headers
+file(GLOB_RECURSE HEADERS
+	src/*.hpp
+)
 
 # Get FTXUI
 include(FetchContent)
@@ -19,22 +30,16 @@ FetchContent_Declare(ftxui
 )
 FetchContent_MakeAvailable(ftxui)
 
-# Sources
-file(GLOB_RECURSE SOURCES
-	src/*.cpp
-)
-
-file(GLOB_RECURSE HEADERS
-	src/*.h
-)
-
+# Create directory for saves
 file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/saves")
 
 # Add binary
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
+# Add include directories
 target_include_directories(${PROJECT_NAME} PRIVATE src)
 
+# Add libraries to link
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE ftxui::screen
 	PRIVATE ftxui::dom
