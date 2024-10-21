@@ -33,17 +33,29 @@ MemoryUI::MemoryUI() {
 
 // Create all needed components and loop
 void MemoryUI::MainGame() {
+  // Mouse X and Y needed for dynamic background
   float mouse_y = 0.0f;
   float mouse_x = 0.0f;
 
-  auto plot_3d = ftxui::Renderer([&] {
-    auto c = ftxui::Canvas(600, 600);
-    std::uint32_t size = 150;
-    std::uint32_t offset = 200;
+  // Background
+  auto background = ftxui::Renderer([&] {
+    // Scale to fit canvas 2x4 braille dot
+    std::uint32_t width = m_Screen.dimx() * 2;
+    std::uint32_t height = m_Screen.dimy() * 4;
 
-    float my = (mouse_y - 90 - offset) / -5.f;
+    // Initialize dynamic canvas component
+    auto c = ftxui::Canvas(width, height);
+
+    // Set size and transformation offset
+    std::uint32_t size = std::max(width, height);
+    std::int32_t offset = size;
+
+    // Black magic math
+    float my = (mouse_y - offset) / -5.f;
     float mx = (mouse_x - 3 * my + offset) / 5.f;
+
     std::vector<std::vector<float>> ys(size, std::vector<float>(size));
+
     for (int y = 0; y < size; y++) {
       for (int x = 0; x < size; x++) {
         float dx = x - mx;
@@ -55,15 +67,15 @@ void MemoryUI::MainGame() {
       for (int x = 0; x < size; x++) {
         if (x != 0) {
           c.DrawPointLine(5 * (x - 1) + 3 * (y - 0) - offset,
-                          90 - 5 * (y - 0) - 5 * ys[y][x - 1] + offset,
+                          offset - 5 * (y - 0) - 5 * ys[y][x - 1],
                           5 * (x - 0) + 3 * (y - 0) - offset,
-                          90 - 5 * (y - 0) - 5 * ys[y][x] + offset);
+                          offset - 5 * (y - 0) - 5 * ys[y][x]);
         }
         if (y != 0) {
           c.DrawPointLine(5 * (x - 0) + 3 * (y - 1) - offset,
-                          90 - 5 * (y - 1) - 5 * ys[y - 1][x] + offset,
+                          offset - 5 * (y - 1) - 5 * ys[y - 1][x],
                           5 * (x - 0) + 3 * (y - 0) - offset,
-                          90 - 5 * (y - 0) - 5 * ys[y][x] + offset);
+                          offset - 5 * (y - 0) - 5 * ys[y][x]);
         }
       }
     }
@@ -71,7 +83,8 @@ void MemoryUI::MainGame() {
     return ftxui::canvas(std::move(c));
   });
 
-  plot_3d |= ftxui::CatchEvent([&](ftxui::Event e) {
+  // Scale mouse coordinates and update variables
+  background |= ftxui::CatchEvent([&](ftxui::Event e) {
     if (e.is_mouse()) {
       mouse_x = (e.mouse().x - 1) * 2;
       mouse_y = (e.mouse().y - 1) * 4;
@@ -79,16 +92,19 @@ void MemoryUI::MainGame() {
     return false;
   });
 
+  // Player count
   std::int32_t player_count = m_pGameLogic->GetPlayerCount();
 
   bool is_selection_stage = true; // Is the size selected (NOT)
 
+  // Whether to add background or not
   bool add_background = false;
 
   // Select options
   auto options_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
+              // Select board size
               ftxui::Slider(ftxui::text("Board size") |
                                 ftxui::color(ftxui::Color::YellowLight),
                             ftxui::SliderWithCallbackOption<std::int32_t>{
@@ -108,6 +124,7 @@ void MemoryUI::MainGame() {
                                 .color_inactive = ftxui::Color::YellowLight,
                             }),
 
+              // Select player count
               ftxui::Slider(ftxui::text("Player count") |
                                 ftxui::color(ftxui::Color::YellowLight),
                             ftxui::SliderOption<std::int32_t>{
@@ -119,10 +136,15 @@ void MemoryUI::MainGame() {
                                 .color_inactive = ftxui::Color::YellowLight,
                             }),
 
+              // Select whether to add background
               ftxui::Checkbox("Background", &add_background) | ftxui::center |
                   ftxui::flex | ftxui::color(ftxui::Color::Yellow),
 
-              ftxui::Renderer([] { return ftxui::separator(); }),
+              ftxui::Renderer([] {
+                return ftxui::separator();
+              }), // Separate select button from options
+
+              // Select/save options
               ftxui::Button("Select",
                             [&] {
                               m_pGameLogic->SetPlayerCount(
@@ -141,6 +163,7 @@ void MemoryUI::MainGame() {
       }) |
       ftxui::vcenter;
 
+  // Save window
   auto save_window =
       ftxui::Window({
           .inner =
@@ -158,10 +181,12 @@ void MemoryUI::MainGame() {
       }) |
       ftxui::vcenter;
 
+  // Get saves
   auto readable_saves_list = get_human_readable_file_list("saves/");
   auto saves_list = get_file_list("saves/");
-  int selected_save = 0;
+  int selected_save = 0; // Index of selected file
 
+  // Load selected save
   auto load_select = [&] {
     m_pGameLogic->LoadState(saves_list[selected_save]);
 
@@ -172,11 +197,13 @@ void MemoryUI::MainGame() {
     is_selection_stage = false;
   };
 
+  // Menu to select save to load
   ftxui::MenuOption menu_load_option;
   menu_load_option.on_enter = load_select;
 
   auto menu_load = Menu(&readable_saves_list, &selected_save, menu_load_option);
 
+  // Load window
   auto load_window =
       ftxui::Window({
           .inner = ftxui::Container::Vertical({
@@ -193,6 +220,7 @@ void MemoryUI::MainGame() {
       }) |
       ftxui::align_right | ftxui::vcenter | ftxui::flex;
 
+  // Main component stacking all the others
   auto main_game_component = ftxui::Container::Stacked({
       // selection stage
       ftxui::Maybe(options_window, &is_selection_stage),
@@ -201,9 +229,10 @@ void MemoryUI::MainGame() {
       ftxui::Maybe(load_window, [&] { return saves_list.size() > 0; }),
       ftxui::Maybe(save_window, [&] { return !is_selection_stage; }),
       m_Renderer,
-      ftxui::Maybe(plot_3d, &add_background),
+      ftxui::Maybe(background, &add_background),
   });
 
+  // Update/draw component in loop
   m_Screen.Loop(main_game_component);
 }
 
