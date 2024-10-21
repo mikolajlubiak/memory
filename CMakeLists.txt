@@ -43,5 +43,5 @@ target_include_directories(${PROJECT_NAME} PRIVATE src)
 target_link_libraries(${PROJECT_NAME}
 	PRIVATE ftxui::screen
 	PRIVATE ftxui::dom
-	PRIVATE ftxui::component  # Not needed for this example.
+	PRIVATE ftxui::component
 )
