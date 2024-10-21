@@ -38,7 +38,7 @@ void MemoryUI::MainGame() {
 
   auto plot_3d = ftxui::Renderer([&] {
     auto c = ftxui::Canvas(600, 600);
-    std::uint32_t size = 100;
+    std::uint32_t size = 150;
     std::uint32_t offset = 200;
 
     float my = (mouse_y - 90 - offset) / -5.f;
