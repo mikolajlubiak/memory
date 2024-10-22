@@ -46,10 +46,11 @@ public:
   // Resize the data. Using calloc instead of realloc since I don't want to copy
   // the data.
   void Resize(std::size_t size_in_bits) {
-    // Allocate memory only if the requested size is larger than current size
-    if (size_in_bits > m_SizeInBits) {
+    // Allocate memory only if the requested size in bytes is larger than
+    // currently allocated bytes
+    if (BitsToBytes(size_in_bits) > GetSizeInBytes()) {
       m_Data = reinterpret_cast<std::uint8_t *>(
-          std::calloc(1, (size_in_bits + 7) / 8));
+          std::calloc(1, BitsToBytes(size_in_bits)));
     }
 
     m_SizeInBits = size_in_bits;
@@ -122,6 +123,10 @@ public:
   }
 
 private:
+  std::size_t BitsToBytes(std::size_t size_in_bits) const {
+    return (size_in_bits + 7) / 8;
+  }
+
   std::uint8_t
       *m_Data; // Array that stores the boolean, 1-bit size, 1 or 0 values
 
