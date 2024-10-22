@@ -279,8 +279,10 @@ ftxui::Component MemoryUI::GetBackgroundComponent() {
   // Scale mouse coordinates and update variables
   background |= ftxui::CatchEvent([&](ftxui::Event e) {
     if (e.is_mouse()) {
-      mouse_x = (e.mouse().x - 1) * 2;
-      mouse_y = (e.mouse().y - 1) * 4;
+      if (e.mouse().x > 1 || e.mouse().y > 1) {
+        mouse_x = (e.mouse().x - 1) * 2;
+        mouse_y = (e.mouse().y - 1) * 4;
+      }
     }
     return false;
   });
