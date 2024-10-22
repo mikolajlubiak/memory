@@ -214,13 +214,12 @@ void MemoryLogic::SaveState(const std::string &filename) {
   file.write(reinterpret_cast<const char *>(&m_PreviousY), sizeof(m_PreviousY));
 
   // Save players matched cards count
-  file.write(reinterpret_cast<const char *>(&m_PlayersMatchedCardsCount[0]),
-             m_PlayersMatchedCardsCount.size() *
-                 sizeof(m_PlayersMatchedCardsCount[0]));
+  file.write(reinterpret_cast<const char *>(m_PlayersMatchedCardsCount.data()),
+             m_PlayersCount * sizeof(m_PlayersMatchedCardsCount[0]));
 
   for (int i = 0; i < m_BoardSize; i++) {
     // Save board
-    file.write(reinterpret_cast<const char *>(&m_Board[i][0]),
+    file.write(reinterpret_cast<const char *>(m_Board[i].data()),
                m_Board[i].size() * sizeof(m_Board[i][0]));
 
     // Save which cards are revealed
@@ -272,9 +271,8 @@ void MemoryLogic::LoadState(const std::string &filename) {
   m_PlayersMatchedCardsCount.resize(m_PlayersCount);
 
   // Load players matched cards count
-  file.read(reinterpret_cast<char *>(&m_PlayersMatchedCardsCount[0]),
-            m_PlayersMatchedCardsCount.size() *
-                sizeof(m_PlayersMatchedCardsCount[0]));
+  file.read(reinterpret_cast<char *>(m_PlayersMatchedCardsCount.data()),
+            m_PlayersCount * sizeof(m_PlayersMatchedCardsCount[0]));
 
   for (int i = 0; i < m_BoardSize; i++) {
     // Resize the DynamicPackedBoolArray
@@ -282,7 +280,7 @@ void MemoryLogic::LoadState(const std::string &filename) {
     m_HasCardBeenMatched[i].Resize(m_BoardSize);
 
     // Load board
-    file.read(reinterpret_cast<char *>(&m_Board[i][0]),
+    file.read(reinterpret_cast<char *>(m_Board[i].data()),
               m_Board.size() * sizeof(m_Board[i][0]));
 
     // Load which cards should be revealed
