@@ -290,74 +290,75 @@ ftxui::Component MemoryUI::GetBackgroundComponent() {
 
 // Options window
 ftxui::Component MemoryUI::GetOptionsWindow() {
-  auto options_window = ftxui::Window({
-      .inner =
-          ftxui::Container::Vertical({
-              // Select board size
-              ftxui::Slider(ftxui::text("Board size") |
-                                ftxui::color(ftxui::Color::YellowLight),
-                            ftxui::SliderWithCallbackOption<std::int32_t>{
-                                .callback =
-                                    [&](std::int32_t board_size) {
-                                      m_BoardSize = static_cast<std::uint32_t>(
-                                                        board_size) *
-                                                    2;
+  auto options_window =
+      ftxui::Window({
+          .inner =
+              ftxui::Container::Vertical({
+                  // Select board size
+                  ftxui::Slider(
+                      ftxui::text("Board size") |
+                          ftxui::color(ftxui::Color::YellowLight),
+                      ftxui::SliderWithCallbackOption<std::int32_t>{
+                          .callback =
+                              [&](std::int32_t board_size) {
+                                m_BoardSize =
+                                    static_cast<std::uint32_t>(board_size) * 2;
 
-                                      m_pGameLogic->SetBoardSize(m_BoardSize);
-                                    },
-                                .value = 2,
-                                .min = 1,
-                                .max = 5,
-                                .increment = 1,
-                                .color_active = ftxui::Color::YellowLight,
-                                .color_inactive = ftxui::Color::YellowLight,
-                            }),
+                                m_pGameLogic->SetBoardSize(m_BoardSize);
+                              },
+                          .value = 2,
+                          .min = 1,
+                          .max = 5,
+                          .increment = 1,
+                          .color_active = ftxui::Color::YellowLight,
+                          .color_inactive = ftxui::Color::YellowLight,
+                      }),
 
-              ftxui::Renderer([] {
-                return ftxui::filler();
-              }), // Make some space between components
+                  ftxui::Renderer([] {
+                    return ftxui::filler();
+                  }), // Make some space between components
 
-              // Select player count
-              ftxui::Slider(ftxui::text("Player count") |
-                                ftxui::color(ftxui::Color::YellowLight),
-                            ftxui::SliderOption<std::int32_t>{
-                                .value = &m_PlayerCount,
-                                .min = 1,
-                                .max = 5,
-                                .increment = 1,
-                                .color_active = ftxui::Color::YellowLight,
-                                .color_inactive = ftxui::Color::YellowLight,
-                            }),
+                  // Select player count
+                  ftxui::Slider(ftxui::text("Player count") |
+                                    ftxui::color(ftxui::Color::YellowLight),
+                                ftxui::SliderWithCallbackOption<std::int32_t>{
+                                    .callback =
+                                        [&](std::int32_t player_count) {
+                                          m_pGameLogic->SetPlayerCount(
+                                              static_cast<std::uint32_t>(
+                                                  m_PlayerCount));
+                                        },
+                                    .value = m_PlayerCount,
+                                    .min = 1,
+                                    .max = 5,
+                                    .increment = 1,
+                                    .color_active = ftxui::Color::YellowLight,
+                                    .color_inactive = ftxui::Color::YellowLight,
+                                }),
 
-              ftxui::Renderer([] {
-                return ftxui::filler();
-              }), // Make some space between components
+                  ftxui::Renderer([] {
+                    return ftxui::filler();
+                  }), // Make some space between components
 
-              // Select whether to add background
-              ftxui::Checkbox("Background", &m_AddBackground) | ftxui::center |
-                  ftxui::color(ftxui::Color::Yellow),
+                  // Select whether to add background
+                  ftxui::Checkbox("Background", &m_AddBackground) |
+                      ftxui::center | ftxui::color(ftxui::Color::Yellow),
 
-              ftxui::Renderer([] {
-                return ftxui::separator();
-              }), // Separate select button from options
+                  ftxui::Renderer([] {
+                    return ftxui::separator();
+                  }), // Separate select button from options
 
-              // Select/save options
-              ftxui::Button("Select",
-                            [&] {
-                              m_pGameLogic->SetPlayerCount(
-                                  static_cast<std::uint32_t>(m_PlayerCount));
+                  // Select/save options
+                  ftxui::Button("Select", [&] { m_ShowOptions = false; }) |
+                      ftxui::center | ftxui::color(ftxui::Color::Yellow),
+              }) |
+              ftxui::flex,
 
-                              m_ShowOptions = false;
-                            }) |
-                  ftxui::center | ftxui::color(ftxui::Color::Yellow),
-          }) |
-          ftxui::flex,
-
-      .title = "Options",
-      .left = 0,
-      .width = 30,
-      .height = 11,
-  });
+          .title = "Options",
+          .left = 0,
+          .width = 30,
+          .height = 11,
+      });
 
   return options_window;
 }

@@ -40,6 +40,8 @@ public:
   // Set player count
   void SetPlayerCount(std::uint32_t player_count) {
     m_PlayersCount = player_count;
+
+    InitializeBoard();
   }
 
   // (On event enter) Select card at specified coordinates
