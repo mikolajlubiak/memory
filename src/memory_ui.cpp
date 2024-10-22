@@ -72,6 +72,9 @@ ftxui::ComponentDecorator MemoryUI::HandleEvents() {
     } else if (event == ftxui::Event::Character('r')) {
       m_pGameLogic->InitializeBoard();
       return true;
+    } else if (event == ftxui::Event::Character('o')) {
+      m_ShowOptions = true;
+      return true;
     }
 
     if (event == ftxui::Event::ArrowUp) {
