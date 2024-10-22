@@ -1,6 +1,7 @@
 #pragma once
 
 // local
+#include "common.hpp"
 #include "memory_logic.hpp"
 
 // libs
@@ -47,12 +48,43 @@ private: // Methods
   // Update m_Message and m_TextStyle based on the game state
   void MessageAndStyleFromGameState();
 
-private:                         // Attributes
-  std::uint32_t m_BoardSize = 4; // Size of the board
+  // Components
+  // Background
+  ftxui::Component GetBackgroundComponent();
+  // Options window
+  ftxui::Component GetOptionsWindow();
+  // Save game window
+  ftxui::Component GetSaveWindow();
+  // Load save window
+  ftxui::Component GetLoadWindow();
+
+private: // Attributes
+  // Size of the board
+  std::uint32_t m_BoardSize = 4;
 
   // Current cursor position
   std::int32_t m_CurrentX = 0;
   std::int32_t m_CurrentY = 0;
+
+  // Show options window
+  bool m_ShowOptions = true;
+
+  // Add background
+  bool m_AddBackground = false;
+
+  // Player count
+  std::int32_t m_PlayerCount;
+
+  // Index of selected file
+  int m_SelectedSave = 0;
+
+  // Get saves
+  std::vector<std::string> m_ReadableSaveList =
+      get_human_readable_file_list("saves/");
+  std::vector<std::string> m_SaveList = get_file_list("saves/");
+
+  // Load window height
+  int m_LoadWindowHeight = static_cast<int>(m_SaveList.size()) + 6;
 
   std::string m_Message = "Select first card"; // Status message
 

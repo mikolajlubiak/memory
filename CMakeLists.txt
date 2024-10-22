@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(memory_game VERSION 1.0.0 LANGUAGES C CXX)
+project(memory_game VERSION 1.1.0 LANGUAGES C CXX)
 
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
