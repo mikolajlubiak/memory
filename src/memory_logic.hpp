@@ -67,8 +67,8 @@ public:
   }
 
   // Return count of found pairs for current player
-  std::uint32_t GetMatchedCardsCount() const {
-    return m_PlayersMatchedCardsCount[m_PlayerIndex];
+  std::uint32_t GetMatchedCardsCount(std::uint32_t player_index) const {
+    return m_PlayersMatchedCardsCount[player_index];
   }
 
   // Player with most matched cards

@@ -71,9 +71,10 @@ ftxui::ComponentDecorator MemoryUI::HandleEvents() {
       return true;
     } else if (event == ftxui::Event::Character('r')) {
       m_pGameLogic->InitializeBoard();
+      MessageAndStyleFromGameState();
       return true;
     } else if (event == ftxui::Event::Character('o')) {
-      m_ShowOptions = true;
+      m_ShowOptions = !m_ShowOptions;
       return true;
     }
 
@@ -131,7 +132,7 @@ ftxui::Element MemoryUI::CreateUI() const {
           ftxui::separator(),
 
           ftxui::text("Player matched "),
-          ftxui::text(std::to_string(m_pGameLogic->GetMatchedCardsCount())) |
+          ftxui::text(std::to_string(m_pGameLogic->GetMatchedCardsCount(m_pGameLogic->GetCurrentPlayerIndex()))) |
               ftxui::blink,
           ftxui::text(" cards"),
           ftxui::separator(),
@@ -206,13 +207,15 @@ void MemoryUI::MessageAndStyleFromGameState() {
     break;
   case GameStatus::gameFinished:
     if (m_pGameLogic->GetWinners().size() == 1) {
-      m_Message = std::format("Player {} won. Congratulations!",
-                              m_pGameLogic->GetWinners()[0] + 1);
+      m_Message = std::format("Player {} won and a matched total of {} cards. Congratulations!",
+                              m_pGameLogic->GetWinners()[0] + 1, m_pGameLogic->GetMatchedCardsCount(m_pGameLogic->GetWinners()[0]));
     } else {
       // Handle multiple winners
       std::string winnerNames;
+      std::uint32_t matchedSum = 0;
       for (const auto &winner : m_pGameLogic->GetWinners()) {
         winnerNames += std::to_string(winner + 1) + ", ";
+        matchedSum += m_pGameLogic->GetMatchedCardsCount(winner);
       }
 
       // Remove trailing comma and space
@@ -221,7 +224,7 @@ void MemoryUI::MessageAndStyleFromGameState() {
         winnerNames.pop_back();
       }
 
-      m_Message = std::format("Players {} won. Congratulations!", winnerNames);
+      m_Message = std::format("Players {} won and a matched total of {} cards. Congratulations!", winnerNames, matchedSum);
     }
 
     m_TextStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);

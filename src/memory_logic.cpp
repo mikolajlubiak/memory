@@ -172,7 +172,7 @@ void MemoryLogic::ResetState() {
 
   // Reset game state
   m_PlayerIndex = 0;
-  m_TurnNumber = 0;
+  m_TurnNumber = 1;
   m_GameStatus = GameStatus::selectingFirstCard;
 }
 
@@ -185,7 +185,7 @@ void MemoryLogic::SaveState(const std::string &filename) {
   // m_TempX and m_TempY are not stored.
   if (m_GameStatus == GameStatus::cardsDidntMatch) {
     m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
-    m_HasCardBeenRevealed[m_PreviousX][m_PreviousX] = false;
+    m_HasCardBeenRevealed[m_PreviousX][m_PreviousY] = false;
 
     m_GameStatus = GameStatus::selectingFirstCard;
   }
@@ -266,6 +266,15 @@ void MemoryLogic::LoadState(const std::string &filename) {
   // Load cursor state
   file.read(reinterpret_cast<char *>(&m_PreviousX), sizeof(m_PreviousX));
   file.read(reinterpret_cast<char *>(&m_PreviousY), sizeof(m_PreviousY));
+
+  // Fix Windows specific bug.
+  // If vector size was lower than m_BoardSize,
+  // then even after resizing it would only store that smaller ammount of data.
+  // Clearing the vector completly fixes this bug.
+  m_Board.clear();
+  m_HasCardBeenRevealed.clear();
+  m_HasCardBeenMatched.clear();
+  m_PlayersMatchedCardsCount.clear();
 
   // Resize the vectors to fit the board size
   m_Board.resize(m_BoardSize, std::vector<char>(m_BoardSize));
