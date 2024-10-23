@@ -40,16 +40,13 @@ void MemoryUI::MainGame() {
 
   // Main component stacking all the others
   auto main_game_component = ftxui::Container::Stacked({
-      // selection stage
       ftxui::Maybe(GetOptionsWindow() | ftxui::vcenter | ftxui::flex,
                    &m_ShowOptions),
 
-      // game
       ftxui::Maybe(GetLoadWindow() | ftxui::align_right | ftxui::vcenter,
                    [&] { return m_SaveList.size() > 0; }),
 
-      ftxui::Maybe(GetSaveWindow() | ftxui::vcenter,
-                   [&] { return !m_ShowOptions; }),
+      GetSaveWindow() | ftxui::vcenter,
 
       m_Renderer,
 
