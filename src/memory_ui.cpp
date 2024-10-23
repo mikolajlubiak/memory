@@ -130,9 +130,23 @@ ftxui::Element MemoryUI::CreateUI() const {
                                   m_pGameLogic->GetCurrentPlayerIndex() + 1)),
           ftxui::separator(),
 
-          ftxui::text("Cards matched: "),
+          ftxui::text("Player matched "),
           ftxui::text(std::to_string(m_pGameLogic->GetMatchedCardsCount())) |
               ftxui::blink,
+          ftxui::text(" cards"),
+          ftxui::separator(),
+
+          ftxui::text(
+              std::format("Turn number: {}", m_pGameLogic->GetTurnNumber())),
+          ftxui::separator(),
+
+          ftxui::text(std::format("Board size: {}x{}",
+                                  m_pGameLogic->GetBoardSize(),
+                                  m_pGameLogic->GetBoardSize())),
+          ftxui::separator(),
+
+          ftxui::text(
+              std::format("Player count: {}", m_pGameLogic->GetPlayerCount())),
           ftxui::separator(),
 
           ftxui::text(m_Message) | m_TextStyle,
@@ -328,9 +342,9 @@ ftxui::Component MemoryUI::GetOptionsWindow() {
                                         [&](std::int32_t player_count) {
                                           m_pGameLogic->SetPlayerCount(
                                               static_cast<std::uint32_t>(
-                                                  m_PlayerCount));
+                                                  player_count));
                                         },
-                                    .value = m_PlayerCount,
+                                    .value = &m_PlayerCount,
                                     .min = 1,
                                     .max = 5,
                                     .increment = 1,
@@ -351,7 +365,8 @@ ftxui::Component MemoryUI::GetOptionsWindow() {
                   }), // Separate select button from options
 
                   // Select/save options
-                  ftxui::Button("Select", [&] { m_ShowOptions = false; }) |
+                  ftxui::Button("Hide (press O to reopen)",
+                                [&] { m_ShowOptions = false; }) |
                       ftxui::center | ftxui::color(ftxui::Color::Yellow),
               }) |
               ftxui::flex,

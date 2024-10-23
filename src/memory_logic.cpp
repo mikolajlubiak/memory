@@ -99,13 +99,17 @@ void MemoryLogic::SelectCard(std::uint32_t current_x, std::uint32_t current_y) {
       m_TempY = current_y;
 
       // Next players turn
-      m_PlayerIndex = (m_PlayerIndex + 1) % m_PlayersCount;
+      if (m_PlayerIndex + 1 < m_PlayersCount) {
+        m_PlayerIndex++;
+      } else {
+        m_PlayerIndex = 0;
+        m_TurnNumber++;
+      }
 
       m_GameStatus = GameStatus::cardsDidntMatch;
     }
 
     return;
-
   } else if (m_GameStatus == GameStatus::cardsDidntMatch) {
     // Hide cards after they didn't match
     m_HasCardBeenRevealed[m_TempX][m_TempY] = false;
@@ -168,6 +172,7 @@ void MemoryLogic::ResetState() {
 
   // Reset game state
   m_PlayerIndex = 0;
+  m_TurnNumber = 0;
   m_GameStatus = GameStatus::selectingFirstCard;
 }
 

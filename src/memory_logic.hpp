@@ -89,6 +89,9 @@ public:
   // Return game status
   std::uint32_t GetBoardSize() const { return m_BoardSize; }
 
+  // Return current turn number
+  std::uint32_t GetTurnNumber() const { return m_TurnNumber; }
+
 private: // Methods
   // Check if the selected cards match
   bool CheckMatch(std::uint32_t x1, std::uint32_t y1, std::uint32_t x2,
@@ -129,6 +132,8 @@ private:                                    // Attributes
       m_PlayersMatchedCardsCount{}; // Vector storing number of matched cards
                                     // for each player
   std::uint32_t m_PlayerIndex = 0;  // Current players turn
+
+  std::uint32_t m_TurnNumber = 1; // Current turn number
 };
 
 } // namespace memory_game
