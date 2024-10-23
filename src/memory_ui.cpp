@@ -131,7 +131,8 @@ ftxui::Element MemoryUI::CreateUI() const {
           ftxui::separator(),
 
           ftxui::text("Player matched "),
-          ftxui::text(std::to_string(m_pGameLogic->GetMatchedCardsCount(m_pGameLogic->GetCurrentPlayerIndex()))) |
+          ftxui::text(std::to_string(m_pGameLogic->GetMatchedCardsCount(
+              m_pGameLogic->GetCurrentPlayerIndex()))) |
               ftxui::blink,
           ftxui::text(" cards"),
           ftxui::separator(),
@@ -206,8 +207,10 @@ void MemoryUI::MessageAndStyleFromGameState() {
     break;
   case GameStatus::gameFinished:
     if (m_pGameLogic->GetWinners().size() == 1) {
-      m_Message = std::format("Player {} won and a matched total of {} cards. Congratulations!",
-                              m_pGameLogic->GetWinners()[0] + 1, m_pGameLogic->GetMatchedCardsCount(m_pGameLogic->GetWinners()[0]));
+      m_Message = std::format(
+          "Player {} won and a matched total of {} cards. Congratulations!",
+          m_pGameLogic->GetWinners()[0] + 1,
+          m_pGameLogic->GetMatchedCardsCount(m_pGameLogic->GetWinners()[0]));
     } else {
       // Handle multiple winners
       std::string winnerNames;
@@ -223,7 +226,9 @@ void MemoryUI::MessageAndStyleFromGameState() {
         winnerNames.pop_back();
       }
 
-      m_Message = std::format("Players {} won and a matched total of {} cards. Congratulations!", winnerNames, matchedSum);
+      m_Message = std::format(
+          "Players {} won and a matched total of {} cards. Congratulations!",
+          winnerNames, matchedSum);
     }
 
     m_TextStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
@@ -367,7 +372,7 @@ ftxui::Component MemoryUI::GetOptionsWindow() {
                   }), // Separate select button from options
 
                   // Select/save options
-                  ftxui::Button("Hide (press O to reopen)",
+                  ftxui::Button("Hide (press O to close/open)",
                                 [&] { m_ShowOptions = false; }) |
                       ftxui::center | ftxui::color(ftxui::Color::Yellow),
               }) |

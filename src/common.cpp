@@ -20,11 +20,12 @@ std::string get_human_readable_timestamp(const std::string &filename) {
   return buffer;
 }
 
-std::vector<std::filesystem::path> get_file_list(const std::filesystem::path &directory) {
+std::vector<std::filesystem::path>
+get_file_list(const std::filesystem::path &directory) {
   std::vector<std::filesystem::path> file_list{};
 
   if (!std::filesystem::exists(directory)) {
-      return file_list;
+    return file_list;
   }
 
   for (const auto &entry : std::filesystem::directory_iterator(directory)) {
@@ -47,9 +48,9 @@ get_human_readable_file_list(const std::filesystem::path &directory) {
 }
 
 void create_dir(const std::filesystem::path &directory) {
-    // Check if the directory exists
-    if (!std::filesystem::exists(directory)) {
-        // Create the directory
-        (std::filesystem::create_directory(directory));
-    }
+  // Check if the directory exists
+  if (!std::filesystem::exists(directory)) {
+    // Create the directory
+    (std::filesystem::create_directory(directory));
+  }
 }

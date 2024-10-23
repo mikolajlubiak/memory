@@ -80,7 +80,9 @@ public:
   std::uint32_t GetPlayerCount() const { return m_PlayersCount; }
 
   // Return total number of cards
-  std::uint32_t GetTotalCardsCount() const { return static_cast<std::uint32_t>(std::pow(m_BoardSize, 2)); }
+  std::uint32_t GetTotalCardsCount() const {
+    return static_cast<std::uint32_t>(std::pow(m_BoardSize, 2));
+  }
 
   // Return game status
   GameStatus GetGameStatus() const { return m_GameStatus; }
