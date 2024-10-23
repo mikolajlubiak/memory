@@ -7,8 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <fstream>
-#include <set>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -48,10 +47,10 @@ public:
   void SelectCard(std::uint32_t current_x, std::uint32_t current_y);
 
   // Save current game state to file
-  void SaveState(const std::string &filename);
+  void SaveState(const std::filesystem::path &filename);
 
   // Load game state from file
-  void LoadState(const std::string &filename);
+  void LoadState(const std::filesystem::path &filename);
 
   // Return const board reference
   const std::vector<std::vector<char>> &GetBoard() const { return m_Board; }
@@ -81,7 +80,7 @@ public:
   std::uint32_t GetPlayerCount() const { return m_PlayersCount; }
 
   // Return total number of cards
-  std::uint32_t GetTotalCardsCount() const { return std::pow(m_BoardSize, 2); }
+  std::uint32_t GetTotalCardsCount() const { return static_cast<std::uint32_t>(std::pow(m_BoardSize, 2)); }
 
   // Return game status
   GameStatus GetGameStatus() const { return m_GameStatus; }

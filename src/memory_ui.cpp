@@ -20,6 +20,8 @@
 namespace memory_game {
 
 MemoryUI::MemoryUI() {
+  create_dir(m_SaveDir);
+
   m_DebugStream.open("debug_output.txt", std::ios::app);
 
   m_Screen.SetCursor(
@@ -392,8 +394,8 @@ ftxui::Component MemoryUI::GetSaveWindow() {
                                    get_timestamp_filename());
 
                                m_ReadableSaveList =
-                                   get_human_readable_file_list("saves/");
-                               m_SaveList = get_file_list("saves/");
+                                   get_human_readable_file_list(m_SaveDir);
+                               m_SaveList = get_file_list(m_SaveDir);
 
                                m_LoadWindowHeight =
                                    static_cast<int>(m_SaveList.size()) + 6;

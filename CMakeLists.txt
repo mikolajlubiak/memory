@@ -30,9 +30,6 @@ FetchContent_Declare(ftxui
 )
 FetchContent_MakeAvailable(ftxui)
 
-# Create directory for saves
-file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/saves")
-
 # Add binary
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 

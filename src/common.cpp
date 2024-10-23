@@ -3,7 +3,6 @@
 
 // std
 #include <ctime>
-#include <filesystem>
 
 std::string get_timestamp_filename() {
   auto now = std::chrono::system_clock::now();
@@ -21,24 +20,36 @@ std::string get_human_readable_timestamp(const std::string &filename) {
   return buffer;
 }
 
-std::vector<std::string> get_file_list(const std::string &directory) {
-  std::vector<std::string> file_list;
+std::vector<std::filesystem::path> get_file_list(const std::filesystem::path &directory) {
+  std::vector<std::filesystem::path> file_list{};
+
+  if (!std::filesystem::exists(directory)) {
+      return file_list;
+  }
+
   for (const auto &entry : std::filesystem::directory_iterator(directory)) {
     if (std::filesystem::is_regular_file(entry)) {
-      file_list.push_back(entry.path().string());
+      file_list.push_back(entry.path());
     }
   }
   return file_list;
 }
 
 std::vector<std::string>
-get_human_readable_file_list(const std::string &directory) {
-  std::vector<std::string> file_list;
-  for (const auto &entry : std::filesystem::directory_iterator(directory)) {
-    if (std::filesystem::is_regular_file(entry)) {
-      file_list.push_back(
-          get_human_readable_timestamp(entry.path().filename().string()));
-    }
+get_human_readable_file_list(const std::filesystem::path &directory) {
+  std::vector<std::string> file_list{};
+
+  for (const auto &entry : get_file_list(directory)) {
+    file_list.push_back(
+        get_human_readable_timestamp(entry.filename().string()));
   }
   return file_list;
+}
+
+void create_dir(const std::filesystem::path &directory) {
+    // Check if the directory exists
+    if (!std::filesystem::exists(directory)) {
+        // Create the directory
+        (std::filesystem::create_directory(directory));
+    }
 }

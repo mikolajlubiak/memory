@@ -14,6 +14,7 @@
 
 // std
 #include <cstdint>
+#include <filesystem>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -78,10 +79,12 @@ private: // Attributes
   // Index of selected file
   int m_SelectedSave = 0;
 
+  const std::filesystem::path m_SaveDir = "saves/"; // Where saves are stored
+
   // Get saves
   std::vector<std::string> m_ReadableSaveList =
-      get_human_readable_file_list("saves/");
-  std::vector<std::string> m_SaveList = get_file_list("saves/");
+      get_human_readable_file_list(m_SaveDir);
+  std::vector<std::filesystem::path> m_SaveList = get_file_list(m_SaveDir);
 
   // Load window height
   int m_LoadWindowHeight = static_cast<int>(m_SaveList.size()) + 6;

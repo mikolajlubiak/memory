@@ -3,9 +3,12 @@
 
 // std
 #include <algorithm>
+#include <filesystem>
 #include <format>
+#include <fstream>
 #include <numeric>
 #include <random>
+#include <set>
 
 namespace memory_game {
 
@@ -147,12 +150,12 @@ void MemoryLogic::InitializeBoard() {
   m_HasCardBeenMatched.resize(m_BoardSize);
   m_PlayersMatchedCardsCount.resize(m_PlayersCount, 0);
 
-  for (int i = 0; i < m_BoardSize; ++i) {
+  for (std::uint32_t i = 0; i < m_BoardSize; ++i) {
     // Resize the DynamicPackedBoolArray and initialize it to zero
     m_HasCardBeenRevealed[i].Resize(m_BoardSize);
     m_HasCardBeenMatched[i].Resize(m_BoardSize);
 
-    for (int j = 0; j < m_BoardSize; ++j) {
+    for (std::uint32_t j = 0; j < m_BoardSize; ++j) {
       m_Board[i][j] = cards[i * m_BoardSize + j];
     }
   }
@@ -176,7 +179,7 @@ void MemoryLogic::ResetState() {
   m_GameStatus = GameStatus::selectingFirstCard;
 }
 
-void MemoryLogic::SaveState(const std::string &filename) {
+void MemoryLogic::SaveState(const std::filesystem::path &filename) {
   // Prevent a weird bug when you save on
   // `m_GameStatus == GameStatus::cardsDidntMatch`
   //
@@ -241,7 +244,7 @@ void MemoryLogic::SaveState(const std::string &filename) {
   file.close();
 }
 
-void MemoryLogic::LoadState(const std::string &filename) {
+void MemoryLogic::LoadState(const std::filesystem::path &filename) {
   // Open file for reading in binary format
   std::ifstream file(filename, std::ios::binary);
 

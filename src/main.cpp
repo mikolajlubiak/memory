@@ -1,5 +1,4 @@
 // local
-#include "common.hpp"
 #include "memory_ui.hpp"
 
 // Main game loop
