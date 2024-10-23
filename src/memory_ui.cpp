@@ -59,7 +59,7 @@ void MemoryUI::MainGame() {
 }
 
 // Handle game events and update game UI
-ftxui::Component MemoryUI::CreateRenderer() {
+ftxui::Component MemoryUI::CreateRenderer() const {
   return ftxui::Renderer([this](bool focus) { return CreateUI(); });
 }
 
@@ -119,7 +119,7 @@ void MemoryUI::CheckBoundsXY() {
 }
 
 // Create static UI game element
-ftxui::Element MemoryUI::CreateUI() {
+ftxui::Element MemoryUI::CreateUI() const {
   return ftxui::window(
       ftxui::hbox({
           ftxui::text("Memory Game") | ftxui::color(ftxui::Color::Grey100) |
@@ -142,7 +142,7 @@ ftxui::Element MemoryUI::CreateUI() {
 
 // Create gridbox of cards
 ftxui::Element MemoryUI::CreateBoard(const std::int32_t current_x,
-                                     const std::int32_t current_y) {
+                                     const std::int32_t current_y) const {
   std::vector<std::vector<ftxui::Element>> cells;
   cells.resize(m_BoardSize, std::vector<ftxui::Element>(m_BoardSize));
 
@@ -226,7 +226,7 @@ void MemoryUI::MessageAndStyleFromGameState() {
 /* Components */
 
 // Background
-ftxui::Component MemoryUI::GetBackgroundComponent() {
+ftxui::Component MemoryUI::GetBackgroundComponent() const {
   // Mouse X and Y needed for dynamic background
   float mouse_y = 0.0f;
   float mouse_x = 0.0f;

@@ -155,7 +155,7 @@ void MemoryLogic::InitializeBoard() {
 }
 
 bool MemoryLogic::CheckMatch(std::uint32_t x1, std::uint32_t y1,
-                             std::uint32_t x2, std::uint32_t y2) {
+                             std::uint32_t x2, std::uint32_t y2) const {
   return m_Board[x1][y1] == m_Board[x2][y2] && !(x1 == x2 && y1 == y2);
 }
 

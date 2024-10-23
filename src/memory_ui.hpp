@@ -30,7 +30,7 @@ private: // Methods
   void MainGame();
 
   // Handle game events and update game UI
-  ftxui::Component CreateRenderer();
+  ftxui::Component CreateRenderer() const;
 
   // Handle events (arrows and enter)
   ftxui::ComponentDecorator HandleEvents();
@@ -39,18 +39,18 @@ private: // Methods
   void CheckBoundsXY();
 
   // Create static UI game element
-  ftxui::Element CreateUI();
+  ftxui::Element CreateUI() const;
 
   // Create gridbox of cards
   ftxui::Element CreateBoard(const std::int32_t current_x,
-                             const std::int32_t current_y);
+                             const std::int32_t current_y) const;
 
   // Update m_Message and m_TextStyle based on the game state
   void MessageAndStyleFromGameState();
 
   // Components
   // Background
-  ftxui::Component GetBackgroundComponent();
+  ftxui::Component GetBackgroundComponent() const;
   // Options window
   ftxui::Component GetOptionsWindow();
   // Save game window
