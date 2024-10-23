@@ -34,7 +34,7 @@ public:
   DynamicPackedBoolArray() : m_SizeInBits(0), m_Data(nullptr) {}
 
   // Allocate memory and initialize to 0
-  DynamicPackedBoolArray(std::size_t size_in_bits)
+  DynamicPackedBoolArray(const std::size_t size_in_bits)
       : m_SizeInBits(size_in_bits) {
     m_Data = reinterpret_cast<std::uint8_t *>(std::calloc(1, GetSizeInBytes()));
   }
@@ -45,7 +45,7 @@ public:
 
   // Resize the data. Using calloc instead of realloc since I don't want to copy
   // the data.
-  void Resize(std::size_t size_in_bits) {
+  void Resize(const std::size_t size_in_bits) {
     // Allocate memory only if the requested size in bytes is larger than
     // currently allocated bytes
     if (BitsToBytes(size_in_bits) > GetSizeInBytes()) {
@@ -115,15 +115,15 @@ public:
   std::size_t GetSizeInBytes() const { return (m_SizeInBits + 7) / 8; }
 
   // Overload [] operator to access bit at position index
-  bool operator[](std::size_t index) const { return GetBit(index); }
+  bool operator[](const std::size_t index) const { return GetBit(index); }
 
   // Overload [] operator to return a Proxy for setting bits
-  Proxy operator[](std::size_t index) {
+  Proxy operator[](const std::size_t index) {
     return Proxy(GetBytePtr(index), index % 8);
   }
 
 private:
-  std::size_t BitsToBytes(std::size_t size_in_bits) const {
+  std::size_t BitsToBytes(const std::size_t size_in_bits) const {
     return (size_in_bits + 7) / 8;
   }
 

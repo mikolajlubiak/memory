@@ -137,12 +137,12 @@ ftxui::Element MemoryUI::CreateUI() {
 
           ftxui::text(m_Message) | m_TextStyle,
       }) | ftxui::center,
-      CreateBoard(&m_CurrentX, &m_CurrentY));
+      CreateBoard(m_CurrentX, m_CurrentY));
 }
 
 // Create gridbox of cards
-ftxui::Element MemoryUI::CreateBoard(const std::int32_t *const current_x,
-                                     const std::int32_t *const current_y) {
+ftxui::Element MemoryUI::CreateBoard(const std::int32_t current_x,
+                                     const std::int32_t current_y) {
   std::vector<std::vector<ftxui::Element>> cells;
   cells.resize(m_BoardSize, std::vector<ftxui::Element>(m_BoardSize));
 
@@ -161,7 +161,7 @@ ftxui::Element MemoryUI::CreateBoard(const std::int32_t *const current_x,
       }
 
       // If the cell is the one user selected light it in blue
-      if (i == *current_x && j == *current_y) {
+      if (i == current_x && j == current_y) {
         color = ftxui::color(ftxui::Color::Blue);
       } else if (m_pGameLogic->GetHasCardBeenMatched()[i][j]) {
         color = ftxui::color(ftxui::Color::Green);

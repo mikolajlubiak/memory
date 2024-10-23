@@ -42,8 +42,8 @@ private: // Methods
   ftxui::Element CreateUI();
 
   // Create gridbox of cards
-  ftxui::Element CreateBoard(const std::int32_t *const current_x,
-                             const std::int32_t *const current_y);
+  ftxui::Element CreateBoard(const std::int32_t current_x,
+                             const std::int32_t current_y);
 
   // Update m_Message and m_TextStyle based on the game state
   void MessageAndStyleFromGameState();
