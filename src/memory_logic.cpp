@@ -268,9 +268,9 @@ void MemoryLogic::LoadState(const std::string &filename) {
   file.read(reinterpret_cast<char *>(&m_PreviousY), sizeof(m_PreviousY));
 
   // Fix Windows specific bug.
-  // If vector size was lower than m_BoardSize,
-  // then even after resizing it would only store that smaller ammount of data.
-  // Clearing the vector completly fixes this bug.
+  // If vector size was lower than m_BoardSize
+  // then, even after resizing, it would only store that smaller amount of data.
+  // Clearing the vector completely fixes this bug.
   m_Board.clear();
   m_HasCardBeenRevealed.clear();
   m_HasCardBeenMatched.clear();
