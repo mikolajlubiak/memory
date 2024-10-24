@@ -16,7 +16,7 @@ Tested on Linux and Windows, but MacOS, and really any other OS with a CMake por
     * `cmake ..`
     * `cmake --build .`
     * `./memory`
-* Windows:
+* Windows (Terminal):
     * `winget install Git.Git`
     * `winget install Kitware.CMake`
     * `git clone https://github.com/mikolajlubiak/memory`
@@ -31,7 +31,7 @@ Tested on Linux and Windows, but MacOS, and really any other OS with a CMake por
     * `winget install Kitware.CMake`
     * Open Visual Studio and click "Clone a repository"
     * Under "Repository location" type/paste: https://github.com/mikolajlubiak/memory
-    * Click "Clone"
+    * Click "Clone" and select the folder inside UI
     * Wait for the project to setup, press F5, or run the project from UI
 
 # Gameplay
