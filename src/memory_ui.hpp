@@ -58,6 +58,8 @@ private: // Methods
   ftxui::Component GetSaveWindow();
   // Load save window
   ftxui::Component GetLoadWindow();
+  // Shortcuts window
+  ftxui::Component GetShortcutsWindow();
 
 private: // Attributes
   // Size of the board
@@ -72,6 +74,9 @@ private: // Attributes
 
   // Add background
   bool m_AddBackground = false;
+
+  // Show shortcuts window
+  bool m_ShowShortcuts = true;
 
   // Player count
   std::int32_t m_PlayerCount;

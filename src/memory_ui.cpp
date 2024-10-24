@@ -45,6 +45,8 @@ void MemoryUI::MainGame() {
 
       GetSaveWindow() | ftxui::vcenter,
 
+      ftxui::Maybe(GetShortcutsWindow(), &m_ShowShortcuts),
+
       m_Renderer,
 
       ftxui::Maybe(GetBackgroundComponent(), &m_AddBackground),
@@ -370,9 +372,8 @@ ftxui::Component MemoryUI::GetOptionsWindow() {
                     return ftxui::separator();
                   }), // Separate select button from options
 
-                  // Select/save options
-                  ftxui::Button("Hide (press O to close/open)",
-                                [&] { m_ShowOptions = false; }) |
+                  // Hide window
+                  ftxui::Button("Hide", [&] { m_ShowOptions = false; }) |
                       ftxui::center | ftxui::color(ftxui::Color::Yellow),
               }) |
               ftxui::flex,
@@ -444,6 +445,31 @@ ftxui::Component MemoryUI::GetLoadWindow() {
   });
 
   return load_window;
+}
+
+// Shortcuts window
+ftxui::Component MemoryUI::GetShortcutsWindow() {
+  return ftxui::Window({
+      .inner = ftxui::Container::Vertical({
+                   // Shortcuts
+                   ftxui::Renderer([] {
+                     return ftxui::vbox({
+                         ftxui::text("o - Open/hide options") | ftxui::flex,
+                         ftxui::filler(),
+                         ftxui::text("r - Reset the board state") | ftxui::flex,
+                         ftxui::separator(),
+                     });
+                   }),
+                   // Hide window
+                   ftxui::Button("Hide", [&] { m_ShowShortcuts = false; }) |
+                       ftxui::center,
+               }) |
+               ftxui::color(ftxui::Color::Violet),
+
+      .title = "Shortcuts",
+      .width = 30,
+      .height = 8,
+  });
 }
 
 } // namespace memory_game
