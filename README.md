@@ -39,3 +39,12 @@ Tested on Linux and Windows, but MacOS, and really any other OS with a CMake por
 * Players take turns; if your selected cards don't match, it's the next player's turn.
 * At the end, the player with the most matched cards wins.
 * If you want, you can save the current game state and load it later.
+
+# Contribution
+For the purposes of this project, I added functionality to the library I use.
+I wanted the memory board grid to update in real time as the slider value changes.
+There was no way to do that, so I quickly studied the library's source code and added that feature myself.
+I achieved this by making the slider call a callback function each time the slider value change.
+I've made a pull request to the upstream, original library, and its author told me it looks like a good thing to have.
+Pull request: https://github.com/ArthurSonzogni/FTXUI/pull/938
+
