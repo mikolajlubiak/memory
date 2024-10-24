@@ -26,10 +26,10 @@ class MemoryUI {
 public:
   MemoryUI();
 
-private: // Methods
   // Create all needed components and loop
   void MainGame();
 
+private: // Methods
   // Handle game events and update game UI
   ftxui::Component CreateRenderer() const;
 

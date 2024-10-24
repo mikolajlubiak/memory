@@ -30,8 +30,6 @@ MemoryUI::MemoryUI() {
   m_Renderer |= HandleEvents();
 
   m_PlayerCount = m_pGameLogic->GetPlayerCount();
-
-  MainGame();
 }
 
 // Create all needed components and loop
