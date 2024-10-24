@@ -15,20 +15,25 @@ file(GLOB_RECURSE HEADERS
 	src/*.hpp
 )
 
-# Get FTXUI
-include(FetchContent)
+# Check if FTXUI is already installed
+find_package(ftxui QUIET)
 
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-set(FETCHCONTENT_QUIET OFF)
+if(NOT ftxui_FOUND)
+    # Get FTXUI
+    include(FetchContent)
 
-FetchContent_Declare(ftxui
-	GIT_REPOSITORY https://github.com/arthursonzogni/ftxui.git
-	GIT_TAG        v5.0.0
-	GIT_PROGRESS   TRUE
-	GIT_SHALLOW    TRUE
-	EXCLUDE_FROM_ALL
-)
-FetchContent_MakeAvailable(ftxui)
+    set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+    set(FETCHCONTENT_QUIET OFF)
+
+    FetchContent_Declare(ftxui
+        GIT_REPOSITORY https://github.com/arthursonzogni/ftxui.git
+        GIT_TAG        v5.0.0
+        GIT_PROGRESS   TRUE
+        GIT_SHALLOW    TRUE
+        EXCLUDE_FROM_ALL
+    )
+    FetchContent_MakeAvailable(ftxui)
+endif()
 
 # Add binary
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
