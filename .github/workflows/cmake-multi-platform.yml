@@ -58,7 +58,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y ftxui
+        sudo apt-get install -y libftxui-dev libftxui-component5.0.0 libftxui-dom5.0.0 libftxui-screen5.0.0
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
