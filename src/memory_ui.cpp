@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cmath>
-#include <format>
 #include <future>
 #include <iterator>
 #include <mutex>
@@ -24,8 +23,8 @@ MemoryUI::MemoryUI() {
 
   m_DebugStream.open("debug_output.txt", std::ios::app);
 
-  m_Screen.SetCursor(
-      ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
+  m_Screen.SetCursor(ftxui::Screen::Cursor{
+      .x = 0, .y = 0, .shape = ftxui::Screen::Cursor::Hidden});
 
   m_Renderer = CreateRenderer();
   m_Renderer |= HandleEvents();
@@ -126,8 +125,10 @@ ftxui::Element MemoryUI::CreateUI() const {
               ftxui::bold,
           ftxui::separator(),
 
-          ftxui::text(std::format("Player's {} turn",
-                                  m_pGameLogic->GetCurrentPlayerIndex() + 1)),
+          ftxui::text(
+              "Player's " +
+              std::to_string(m_pGameLogic->GetCurrentPlayerIndex() + 1) +
+              " turn"),
           ftxui::separator(),
 
           ftxui::text("Player matched "),
@@ -137,17 +138,16 @@ ftxui::Element MemoryUI::CreateUI() const {
           ftxui::text(" cards"),
           ftxui::separator(),
 
-          ftxui::text(
-              std::format("Turn number: {}", m_pGameLogic->GetTurnNumber())),
+          ftxui::text("Turn number: " +
+                      std::to_string(m_pGameLogic->GetTurnNumber())),
           ftxui::separator(),
 
-          ftxui::text(std::format("Board size: {}x{}",
-                                  m_pGameLogic->GetBoardSize(),
-                                  m_pGameLogic->GetBoardSize())),
+          ftxui::text("Board size: " + std::to_string(m_BoardSize) + "x" +
+                      std::to_string(m_BoardSize)),
           ftxui::separator(),
 
-          ftxui::text(
-              std::format("Player count: {}", m_pGameLogic->GetPlayerCount())),
+          ftxui::text("Player count: " +
+                      std::to_string(m_pGameLogic->GetPlayerCount())),
           ftxui::separator(),
 
           ftxui::text(m_Message) | m_TextStyle,
@@ -207,10 +207,12 @@ void MemoryUI::MessageAndStyleFromGameState() {
     break;
   case GameStatus::gameFinished:
     if (m_pGameLogic->GetWinners().size() == 1) {
-      m_Message = std::format(
-          "Player {} won and a matched total of {} cards. Congratulations!",
-          m_pGameLogic->GetWinners()[0] + 1,
-          m_pGameLogic->GetMatchedCardsCount(m_pGameLogic->GetWinners()[0]));
+      m_Message = "Player " +
+                  std::to_string(m_pGameLogic->GetWinners()[0] + 1) +
+                  " won and a matched total of " +
+                  std::to_string(m_pGameLogic->GetMatchedCardsCount(
+                      m_pGameLogic->GetWinners()[0])) +
+                  " cards. Congratulations!";
     } else {
       // Handle multiple winners
       std::string winnerNames;
@@ -226,9 +228,8 @@ void MemoryUI::MessageAndStyleFromGameState() {
         winnerNames.pop_back();
       }
 
-      m_Message = std::format(
-          "Players {} won and a matched total of {} cards. Congratulations!",
-          winnerNames, matchedSum);
+      m_Message = "Players " + winnerNames + " won and a matched total of " +
+                  std::to_string(matchedSum) + " cards. Congratulations!";
     }
 
     m_TextStyle = ftxui::bold | ftxui::color(ftxui::Color::Green);
