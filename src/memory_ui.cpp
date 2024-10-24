@@ -23,8 +23,8 @@ MemoryUI::MemoryUI() {
 
   m_DebugStream.open("debug_output.txt", std::ios::app);
 
-  m_Screen.SetCursor(
-      ftxui::Screen::Cursor(0, 0, ftxui::Screen::Cursor::Hidden));
+  m_Screen.SetCursor(ftxui::Screen::Cursor{
+      .x = 0, .y = 0, .shape = ftxui::Screen::Cursor::Hidden});
 
   m_Renderer = CreateRenderer();
   m_Renderer |= HandleEvents();
