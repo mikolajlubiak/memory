@@ -1,4 +1,6 @@
-![Game showcase](docs/showcase.png "memory")
+[![Game showcase](docs/showcase.png "Game showcase")
+](https://github.com/user-attachments/assets/03447198-e033-4f70-9caa-a41b9e9645b5
+)
 
 ## Simple, cross platform, terminal memory game
 
