@@ -21,8 +21,6 @@ namespace memory_game {
 MemoryUI::MemoryUI() {
   create_dir(m_SaveDir);
 
-  m_DebugStream.open("debug_output.txt", std::ios::app);
-
   m_Screen.SetCursor(ftxui::Screen::Cursor{
       .x = 0, .y = 0, .shape = ftxui::Screen::Cursor::Hidden});
 

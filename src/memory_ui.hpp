@@ -105,9 +105,6 @@ private: // Attributes
   // Handle events and update static UI
   ftxui::Component m_Renderer;
 
-  // Debug output stream
-  std::ofstream m_DebugStream;
-
   // Handle the game logic
   std::unique_ptr<MemoryLogic> m_pGameLogic = std::make_unique<MemoryLogic>();
 };
