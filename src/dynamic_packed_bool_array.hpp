@@ -1,3 +1,24 @@
+/*
+ *
+ * This data class was written to efficiently store boolean informations.
+ *
+ * Q: Why not use std::vector or std::array?
+ * A: They store each boolean (1 bit) element in a whole byte (8 bit).
+ * So it's quite inefficient in terms of storage.
+ *
+ * Q: Why not use std::bitset?
+ * A: It doesn't support dynamic memory allocation.
+ *
+ * Q: Why not use boost::dynamic_bitset?
+ * A: I don't really want to add a new library as a depenendency just to include one data class.
+ *
+ * Q: Is it really needed for such project?
+ * A: No. I wrote it just for the art of writing such thing.
+ * std::vector was and would have been perfectly fine...
+ * But I just like writing cool low-ish level things.
+ *
+*/
+
 #pragma once
 
 #include <cmath>
