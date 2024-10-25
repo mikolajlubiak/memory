@@ -4,11 +4,11 @@
 // std
 #include <ctime>
 
-std::string get_timestamp_filename() {
+std::filesystem::path get_timestamp_filename() {
   auto now = std::chrono::system_clock::now();
   std::time_t now_c = std::chrono::system_clock::to_time_t(now);
   std::string timestamp = std::to_string(now_c);
-  return "saves/" + timestamp + ".dat";
+  return timestamp + ".dat";
 }
 
 std::string get_human_readable_timestamp(const std::string &filename) {

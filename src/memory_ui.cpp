@@ -391,7 +391,7 @@ ftxui::Component MemoryUI::GetSaveWindow() {
       .inner = ftxui::Button("Save",
                              [&] {
                                m_pGameLogic->SaveState(
-                                   get_timestamp_filename());
+                                   m_SaveDir / get_timestamp_filename());
 
                                m_ReadableSaveList =
                                    get_human_readable_file_list(m_SaveDir);

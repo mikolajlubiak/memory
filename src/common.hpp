@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-std::string get_timestamp_filename();
+std::filesystem::path get_timestamp_filename();
 
 std::string get_human_readable_timestamp(const std::string &filename);
 
