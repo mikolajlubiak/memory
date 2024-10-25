@@ -3,6 +3,7 @@
 )
 
 ## Simple, cross platform, terminal memory game
+#### Project development and progress showcase: https://video.infosec.exchange/w/p/fxme6he9a3h8AAHQHrrMG4
 
 # Build
 Tested on Linux and Windows, but MacOS, and really any other OS with a CMake port and C++20 compatible compiler, should work as well.
