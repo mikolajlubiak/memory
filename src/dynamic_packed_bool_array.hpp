@@ -1,6 +1,6 @@
 /*
  *
- * This data class was written to efficiently store boolean informations.
+ * This data class was written to efficiently store boolean arrays with dynamic memory allocation.
  *
  * Q: Why not use std::vector or std::array?
  * A: They store each boolean (1 bit) element in a whole byte (8 bit).
@@ -16,6 +16,7 @@
  * A: No. I wrote it just for the art of writing such thing.
  * std::vector was and would have been perfectly fine...
  * But I just like writing cool low-ish level things.
+ * Actually the memory savings are at the cost of more overhead to write and read data.
  *
 */
 
