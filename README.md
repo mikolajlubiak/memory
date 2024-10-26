@@ -10,6 +10,8 @@ Tested on Linux and Windows, but MacOS, and really any other OS with a CMake por
 
 * Linux (and other Unix systems like MacOS):
     * Install CMake and Git (different commands based on your distribution)
+        * Fedora: `sudo dnf install cmake git`
+        * Arch: `sudo pacman -S --needed cmake git`
     * `git clone https://github.com/mikolajlubiak/memory`
     * `cd memory`
     * `mkdir build`
