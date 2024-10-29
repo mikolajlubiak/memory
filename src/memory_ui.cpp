@@ -24,9 +24,6 @@ MemoryUI::MemoryUI() {
   m_Screen.SetCursor(ftxui::Screen::Cursor{
       .x = 0, .y = 0, .shape = ftxui::Screen::Cursor::Hidden});
 
-  m_Renderer = CreateRenderer();
-  m_Renderer |= HandleEvents();
-
   m_PlayerCount = m_pGameLogic->GetPlayerCount();
 }
 
@@ -45,22 +42,24 @@ void MemoryUI::MainGame() {
 
       ftxui::Maybe(GetShortcutsWindow(), &m_ShowShortcuts),
 
-      m_Renderer,
+      GameBoardUI() | HandleMemoryEvents(),
 
       ftxui::Maybe(GetBackgroundComponent(), &m_AddBackground),
   });
+
+  main_game_component |= HandleGlobalEvents();
 
   // Update/draw component in loop
   m_Screen.Loop(main_game_component);
 }
 
 // Handle game events and update game UI
-ftxui::Component MemoryUI::CreateRenderer() const {
+ftxui::Component MemoryUI::GameBoardUI() const {
   return ftxui::Renderer([this](bool focus) { return CreateUI(); });
 }
 
-// Handle events (arrows and enter)
-ftxui::ComponentDecorator MemoryUI::HandleEvents() {
+// Handle global events (shortcuts)
+ftxui::ComponentDecorator MemoryUI::HandleGlobalEvents() {
   return ftxui::CatchEvent([this](ftxui::Event event) {
     if (event == ftxui::Event::Character('q')) {
       m_Screen.ExitLoopClosure()();
@@ -74,6 +73,13 @@ ftxui::ComponentDecorator MemoryUI::HandleEvents() {
       return true;
     }
 
+    return false;
+  });
+}
+
+// Handle game specific events (arrows and enter)
+ftxui::ComponentDecorator MemoryUI::HandleMemoryEvents() {
+  return ftxui::CatchEvent([this](ftxui::Event event) {
     if (event == ftxui::Event::ArrowUp) {
       m_CurrentX--;
       CheckBoundsXY();
@@ -452,6 +458,8 @@ ftxui::Component MemoryUI::GetShortcutsWindow() {
                    // Shortcuts
                    ftxui::Renderer([] {
                      return ftxui::vbox({
+                         ftxui::text("q - Quit") | ftxui::flex,
+                         ftxui::filler(),
                          ftxui::text("o - Open/hide options") | ftxui::flex,
                          ftxui::filler(),
                          ftxui::text("r - Reset the board state") | ftxui::flex,
@@ -465,8 +473,8 @@ ftxui::Component MemoryUI::GetShortcutsWindow() {
                ftxui::color(ftxui::Color::Violet),
 
       .title = "Shortcuts",
-      .width = 30,
-      .height = 8,
+      .width = 28,
+      .height = 9,
   });
 }
 

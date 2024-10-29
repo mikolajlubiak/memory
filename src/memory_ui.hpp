@@ -31,10 +31,13 @@ public:
 
 private: // Methods
   // Handle game events and update game UI
-  ftxui::Component CreateRenderer() const;
+  ftxui::Component GameBoardUI() const;
 
-  // Handle events (arrows and enter)
-  ftxui::ComponentDecorator HandleEvents();
+  // Handle global events (shortcuts)
+  ftxui::ComponentDecorator HandleGlobalEvents();
+
+  // Handle game specific events (arrows and enter)
+  ftxui::ComponentDecorator HandleMemoryEvents();
 
   // Clamp m_CurrentX and m_CurrentY
   void CheckBoundsXY();
@@ -101,9 +104,6 @@ private: // Attributes
       ftxui::color(ftxui::Color::LightYellow3); // Message style
 
   ftxui::ScreenInteractive m_Screen = ftxui::ScreenInteractive::Fullscreen();
-
-  // Handle events and update static UI
-  ftxui::Component m_Renderer;
 
   // Handle the game logic
   std::unique_ptr<MemoryLogic> m_pGameLogic = std::make_unique<MemoryLogic>();
