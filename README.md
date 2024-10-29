@@ -50,6 +50,6 @@ For the purposes of this project, I added functionality to the library I use.
 I wanted the memory board grid to update in real time as the slider value changes.
 There was no way to do that, so I quickly studied the library's source code and added that feature myself.
 I achieved this by making the slider call a callback function each time the slider value change.
-I've made a pull request to the upstream, original library, and its author told me it looks like a good thing to have.
+I've made a pull request to the upstream, original library, and it has been merged.
 Pull request: https://github.com/ArthurSonzogni/FTXUI/pull/938
 
