@@ -3,8 +3,9 @@
  * This data class was written to efficiently store boolean arrays with dynamic memory allocation.
  *
  * Q: Why not use std::vector or std::array?
- * A: They store each boolean (1 bit) element in a whole byte (8 bit).
- * So it's quite inefficient in terms of storage.
+ * A: They can store each boolean (1 bit) element in a whole byte (8 bit)[1].
+ * So it can be quite inefficient in terms of storage.
+ * [1]: Implementation dependent
  *
  * Q: Why not use std::bitset?
  * A: It doesn't support dynamic memory allocation.
