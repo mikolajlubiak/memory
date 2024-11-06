@@ -132,7 +132,7 @@ void MemoryLogic::InitializeBoard() {
   std::vector<char> cards;
   cards.resize(GetTotalCardsCount());
 
-  for (int i = 0; i < cards.size(); i += 2) {
+  for (std::size_t i = 0; i < cards.size(); i += 2) {
     char c = 'A' + i / 2;
     cards[i] = c;
     cards[i + 1] = c;
@@ -224,7 +224,7 @@ void MemoryLogic::SaveState(const std::filesystem::path &filename) {
   file.write(reinterpret_cast<const char *>(m_PlayersMatchedCardsCount.data()),
              m_PlayersCount * sizeof(m_PlayersMatchedCardsCount[0]));
 
-  for (int i = 0; i < m_BoardSize; i++) {
+  for (std::size_t i = 0; i < m_BoardSize; i++) {
     // Save board
     file.write(reinterpret_cast<const char *>(m_Board[i].data()),
                m_Board[i].size() * sizeof(m_Board[i][0]));
@@ -290,7 +290,7 @@ void MemoryLogic::LoadState(const std::filesystem::path &filename) {
   file.read(reinterpret_cast<char *>(m_PlayersMatchedCardsCount.data()),
             m_PlayersCount * sizeof(m_PlayersMatchedCardsCount[0]));
 
-  for (int i = 0; i < m_BoardSize; i++) {
+  for (std::size_t i = 0; i < m_BoardSize; i++) {
     // Resize the DynamicPackedBoolArray
     m_HasCardBeenRevealed[i].Resize(m_BoardSize);
     m_HasCardBeenMatched[i].Resize(m_BoardSize);

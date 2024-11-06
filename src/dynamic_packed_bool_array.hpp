@@ -1,6 +1,7 @@
 /*
  *
- * This data class was written to efficiently store boolean arrays with dynamic memory allocation.
+ * This data class was written to efficiently store boolean arrays with dynamic
+ * memory allocation.
  *
  * Q: Why not use std::vector or std::array?
  * A: They can store each boolean (1 bit) element in a whole byte (8 bit)[1].
@@ -11,15 +12,17 @@
  * A: It doesn't support dynamic memory allocation.
  *
  * Q: Why not use boost::dynamic_bitset?
- * A: I don't really want to add a new library as a depenendency just to include one data class.
+ * A: I don't really want to add a new library as a depenendency just to include
+ * one data class.
  *
  * Q: Is it really needed for such project?
  * A: No. I wrote it just for the art of writing such thing.
  * std::vector was and would have been perfectly fine...
  * But I just like writing cool low-ish level things.
- * Actually the memory savings are at the cost of more overhead to write and read data.
+ * Actually the memory savings are at the cost of more overhead to write and
+ * read data.
  *
-*/
+ */
 
 #pragma once
 
@@ -54,7 +57,7 @@ private:
 
 class DynamicPackedBoolArray {
 public:
-  DynamicPackedBoolArray() : m_SizeInBits(0), m_Data(nullptr) {}
+  DynamicPackedBoolArray() : m_Data(nullptr), m_SizeInBits(0) {}
 
   // Allocate memory and initialize to 0
   DynamicPackedBoolArray(const std::size_t size_in_bits)
